@@ -1,14 +1,38 @@
 import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; // ✅ Add this line
 import '../App.css';
 
 function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate(); // ✅ Add this line
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Add API call for admin login
-    alert(`Logging in with email: ${email}`);
+    setLoading(true);
+
+    try {
+      const response = await axios.post("http://localhost:5000/api/admins/login", {
+        email,
+        password,
+      });
+
+      alert(response.data.message || "Login successful");
+
+      localStorage.setItem("adminToken", response.data.token);
+      localStorage.setItem("adminInfo", JSON.stringify(response.data.admin));
+
+      // ✅ Redirect to Admin Dashboard
+      navigate('/admin-dashboard'); // 👈 Redirect here
+
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || "Login failed");
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -39,7 +63,9 @@ function AdminLogin() {
           <a href="/admin-forgot-password">Forgot Password?</a>
         </div>
 
-        <button type="submit" className="login-button">Login</button>
+        <button type="submit" className="login-button" disabled={loading}>
+          {loading ? "Logging in..." : "Login"}
+        </button>
       </form>
     </div>
   );

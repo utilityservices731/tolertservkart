@@ -1,24 +1,27 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { getProducts, createProduct } = require('../controllers/productController');
-const { protect } = require('../middleware/authMiddleware');
+const db = require("../db"); // your mysql connection
+const upload = require("../middleware/upload");
 
+// Add product with image
+router.post("/add", upload.single("image"), (req, res) => {
+  const { title, description, category, price } = req.body;
+  const image = req.file ? req.file.filename : null;
 
-router.get('/', getProducts);
+  const sql = "INSERT INTO products (title, description, category, price, image) VALUES (?, ?, ?, ?, ?)";
+  db.query(sql, [title, description, category, price, image], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.status(200).json({ message: "Product added successfully" });
+  });
+});
 
-
-router.post('/', protect, createProduct);
-
-
-router.get('/my', protect, async (req, res) => {
-  const db = require('../config/db');
-  try {
-    const [products] = await db.query('SELECT * FROM products WHERE owner_id = ?', [req.user.userId]);
-    res.json(products);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
+// Get all products
+router.get("/", (req, res) => {
+  const sql = "SELECT * FROM products ORDER BY id DESC";
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results);
+  });
 });
 
 module.exports = router;

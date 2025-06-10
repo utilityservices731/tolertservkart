@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import "../App.css";
 
+
 const Contact = () => {
   const [form, setForm] = useState({
     name: "",
@@ -30,7 +31,6 @@ const Contact = () => {
       </div>
 
       <div className="contact-container">
-        {/* Contact Form */}
         <div className="contact-form-section">
           <h2>Send Us a Message</h2>
           <p>Have questions or feedback? We'd love to hear from you!</p>
@@ -65,7 +65,6 @@ const Contact = () => {
           </form>
         </div>
 
-        {/* Contact Info */}
         <div className="contact-info-section">
           <h3>Our Office</h3>
           <p><strong>ToletServKart Pvt. Ltd.</strong></p>
@@ -87,7 +86,6 @@ const Contact = () => {
         </div>
       </div>
 
-      {/* Google Map */}
       <div className="contact-map">
         <iframe
           title="ToletServKart Office Location"

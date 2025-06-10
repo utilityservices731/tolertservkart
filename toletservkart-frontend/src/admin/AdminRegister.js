@@ -1,22 +1,41 @@
 import React, { useState } from 'react';
+import axios from 'axios'; 
 import '../App.css';
 
 function AdminRegister() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Add API call for admin registration
-    alert(`Registering admin: ${name}`);
+    setLoading(true);
+
+    try {
+      const response = await axios.post("http://localhost:5000/api/admins/register", {
+        name,
+        email,
+        password,
+      });
+
+      alert(response.data.message || "Admin registered successfully");
+      // Optionally clear the form:
+      setName('');
+      setEmail('');
+      setPassword('');
+    } catch (error) {
+      console.error(error);
+      alert(error.response?.data?.message || "Registration failed");
+    }
+
+    setLoading(false);
   };
 
   return (
     <div className="admin-register container">
       <h2 className="register-title">Admin Register</h2>
       <form className="register-form" onSubmit={handleSubmit}>
-
         <label htmlFor="name">Full Name</label>
         <input 
           id="name"
@@ -47,7 +66,9 @@ function AdminRegister() {
           required 
         />
 
-        <button type="submit" className="register-button">Register</button>
+        <button type="submit" className="register-button" disabled={loading}>
+          {loading ? "Registering..." : "Register"}
+        </button>
       </form>
     </div>
   );

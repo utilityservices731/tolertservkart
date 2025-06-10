@@ -19,18 +19,16 @@ function ChatPage() {
 
   return (
     <div className="chat-page-wrapper">
-      <div className="chat-info-section">
+      <section className="chat-info-section">
         <h1 className="chat-intro-heading">Messaging Center</h1>
-      <p>
-  You can use this chat to communicate directly with the seller or buyer regarding any listing on the platform.
-  Feel free to ask about product availability, price negotiation, pickup details, or rental duration. Be clear and respectful 
-  while messaging, and avoid sharing any personal sensitive information. This chat helps streamline the communication process 
-  and builds trust between both parties. <br /><br />
-  Please note: All messages are stored securely for your future reference and support. If you face any issues, 
-  contact our support team through the Help section.
-</p>
-
-      </div>
+        <p>
+          Communicate directly with the seller or buyer regarding any listing.
+          Ask about availability, pricing, pickup, or rental terms.
+          Keep conversations respectful and avoid sharing personal details.
+          <br /><br />
+          All chats are securely stored for reference. For issues, contact our support via the Help section.
+        </p>
+      </section>
 
       <div className="chat-container">
         <h2 className="chat-header">Chat with Seller</h2>
@@ -44,7 +42,7 @@ function ChatPage() {
         <form className="chat-input" onSubmit={handleSend}>
           <input
             type="text"
-            placeholder="Type a message..."
+            placeholder="Type your message..."
             value={newMsg}
             onChange={(e) => setNewMsg(e.target.value)}
           />
