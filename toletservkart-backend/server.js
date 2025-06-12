@@ -45,7 +45,7 @@ app.post("/api/auth/register", async (req, res) => {
     await query("INSERT INTO users (name, email, password) VALUES (?, ?, ?)", [
       name,
       email,
-      password, // storing as plain text
+      password,
     ]);
 
     res.status(201).json({ message: "User registered successfully." });
@@ -108,7 +108,7 @@ app.post("/api/owners/register", async (req, res) => {
     await query("INSERT INTO owners (name, email, password) VALUES (?, ?, ?)", [
       name,
       email,
-      password, // plain text password
+      password,
     ]);
 
     res.status(201).json({ message: "Owner registered successfully." });
@@ -171,7 +171,7 @@ app.post("/api/admins/register", async (req, res) => {
     await query("INSERT INTO admins (name, email, password) VALUES (?, ?, ?)", [
       name,
       email,
-      password, // plain text for now
+      password,
     ]);
 
     res.status(201).json({ message: "Admin registered successfully." });
@@ -216,6 +216,76 @@ app.post("/api/admins/login", async (req, res) => {
     res.status(500).json({ message: "Server error." });
   }
 });
+
+// ---------- CREATE ORDER ----------
+app.post("/api/orders", async (req, res) => {
+  const { user_id, item, type, price, date, status } = req.body;
+
+  if (!user_id || !item || !type || !price || !date || !status) {
+    return res.status(400).json({ message: "All fields are required." });
+  }
+
+  try {
+    await query(
+      "INSERT INTO orders (user_id, item, type, price, date, status) VALUES (?, ?, ?, ?, ?, ?)",
+      [user_id, item, type, price, date, status]
+    );
+
+    res.status(201).json({ message: "Order saved successfully." });
+  } catch (err) {
+    console.error("Order creation error:", err);
+    res.status(500).json({ message: "Server error." });
+  }
+});
+
+// ---------- GET USER ORDER HISTORY ----------
+app.get("/api/orders/:userId", async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const orders = await query("SELECT * FROM orders WHERE user_id = ?", [userId]);
+    res.status(200).json(orders);
+  } catch (err) {
+    console.error("Fetch orders error:", err);
+    res.status(500).json({ message: "Server error." });
+  }
+});
+
+// ---------- PLACE ORDER ----------
+app.post("/api/orders", async (req, res) => {
+  const { name, email, address, city, zip, paymentMethod } = req.body;
+
+  if (!name || !email || !address || !city || !zip || !paymentMethod) {
+    return res.status(400).json({ message: "All fields are required." });
+  }
+
+  try {
+    await query(
+      "INSERT INTO orders (name, email, address, city, zip, payment_method) VALUES (?, ?, ?, ?, ?, ?)",
+      [name, email, address, city, zip, paymentMethod]
+    );
+
+    res.status(201).json({ message: "Order placed successfully." });
+  } catch (err) {
+    console.error("Order placement error:", err);
+    res.status(500).json({ message: "Server error while placing order." });
+  }
+});
+
+// GET all listings (no filter)
+app.get('/api/listings', (req, res) => {
+  const query = 'SELECT * FROM listings';
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("DB error:", err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json(results);
+  });
+});
+
+
 
 // ---------- START SERVER ----------
 const PORT = process.env.PORT || 5000;

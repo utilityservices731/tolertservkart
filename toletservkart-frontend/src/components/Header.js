@@ -3,11 +3,10 @@ import { Link } from 'react-router-dom';
 import '../App.css';
 
 const Header = () => {
-  const locations = ['Delhi', 'Mumbai', 'Bangalore', 'Chennai', 'Kolkata'];
-  const [selectedLocation, setSelectedLocation] = useState('Select Location');
+  const [location, setLocation] = useState('');
 
   const handleLocationChange = (e) => {
-    setSelectedLocation(e.target.value);
+    setLocation(e.target.value);
   };
 
   return (
@@ -17,13 +16,13 @@ const Header = () => {
           <Link to="/">ToletServKart</Link>
         </div>
 
-        <div className="location-select">
-          <select value={selectedLocation} onChange={handleLocationChange}>
-            <option disabled>Select Location</option>
-            {locations.map((loc) => (
-              <option key={loc} value={loc}>{loc}</option>
-            ))}
-          </select>
+        <div className="location-input">
+          <input
+            type="text"
+            placeholder="Enter area or pincode in Lucknow"
+            value={location}
+            onChange={handleLocationChange}
+          />
         </div>
 
         <nav className="nav-links">

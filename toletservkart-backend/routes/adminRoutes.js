@@ -61,4 +61,32 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Admin Dashboard Data
+router.get('/dashboard', async (req, res) => {
+  try {
+    const [[userCount]] = await db.query('SELECT COUNT(*) AS totalUsers FROM users');
+    const [[listingCount]] = await db.query('SELECT COUNT(*) AS activeListings FROM products WHERE status = "active"');
+    const [[pendingCount]] = await db.query('SELECT COUNT(*) AS pendingRequests FROM owner_requests WHERE status = "pending"');
+    const [[messageCount]] = await db.query('SELECT COUNT(*) AS newMessages FROM messages WHERE is_read = 0');
+
+    const recentActivities = [
+      'User JohnDoe registered',
+      'New property listing uploaded',
+      'Owner request approved',
+      'Admin updated system settings',
+    ]; // You can make this dynamic from a logs table if needed
+
+    res.json({
+      totalUsers: userCount.totalUsers,
+      activeListings: listingCount.activeListings,
+      pendingRequests: pendingCount.pendingRequests,
+      newMessages: messageCount.newMessages,
+      recentActivities,
+    });
+  } catch (err) {
+    console.error('Dashboard error:', err);
+    res.status(500).json({ message: 'Failed to fetch dashboard data', error: err.message });
+  }
+});
+
 module.exports = router;

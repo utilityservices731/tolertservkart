@@ -36,39 +36,52 @@ function AdminLogin() {
   };
 
   return (
-    <div className="admin-login container">
-      <h2 className="login-title">Admin Login</h2>
-      <form className="login-form" onSubmit={handleSubmit}>
-        <label htmlFor="email">Email Address</label>
-        <input 
-          id="email"
-          type="email" 
-          placeholder="Enter your email" 
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required 
-        />
+  <div className="admin-login-page">
+    <div className="admin-login-container">
+      <div className="admin-login-card">
+        <h2 className="login-title">Welcome Back, Admin</h2>
+        <p className="login-subtext">Sign in to access your dashboard</p>
 
-        <label htmlFor="password">Password</label>
-        <input 
-          id="password"
-          type="password" 
-          placeholder="Enter your password" 
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required 
-        />
+        <form className="login-form" onSubmit={handleSubmit}>
+          <label htmlFor="email">Email Address</label>
+          <div className="input-icon-wrapper">
+            <input 
+              id="email"
+              type="email"
+              placeholder="Enter your email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required 
+            />
+            <span className="input-icon">@</span>
+          </div>
 
-        <div className="forgot-password">
-          <a href="/admin-forgot-password">Forgot Password?</a>
-        </div>
+          <label htmlFor="password">Password</label>
+          <div className="input-icon-wrapper">
+            <input 
+              id="password"
+              type="password"
+              placeholder="Enter your password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required 
+            />
+            <span className="input-icon">🔒</span>
+          </div>
 
-        <button type="submit" className="login-button" disabled={loading}>
-          {loading ? "Logging in..." : "Login"}
-        </button>
-      </form>
+          <div className="forgot-password">
+            <a href="/admin-forgot-password">Forgot Password?</a>
+          </div>
+
+          <button type="submit" className="login-button" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
+          </button>
+        </form>
+      </div>
     </div>
-  );
+  </div>
+);
+
 }
 
 export default AdminLogin;

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 import '../App.css';
 
 function Checkout() {
@@ -11,13 +12,38 @@ function Checkout() {
     paymentMethod: 'card',
   });
 
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert('Order placed successfully! (Payment gateway not connected)');
+    setLoading(true);
+    setMessage('');
+
+    try {
+      const response = await axios.post('http://localhost:5000/api/orders', formData);
+
+      if (response.status === 201) {
+        setMessage('✅ Order placed successfully!');
+        setFormData({
+          name: '',
+          email: '',
+          address: '',
+          city: '',
+          zip: '',
+          paymentMethod: 'card',
+        });
+      }
+    } catch (error) {
+      console.error('Order submission error:', error);
+      setMessage('❌ Failed to place order. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -83,8 +109,13 @@ function Checkout() {
             <option value="upi">UPI</option>
             <option value="cod">Cash on Delivery</option>
           </select>
-          <button type="submit" className="pay-btn">Place Order</button>
+          <button type="submit" className="pay-btn" disabled={loading}>
+            {loading ? 'Placing Order...' : 'Place Order'}
+          </button>
         </form>
+
+        {/* Response Message */}
+        {message && <p className="checkout-message">{message}</p>}
 
         {/* Note Section */}
         <div className="checkout-note">

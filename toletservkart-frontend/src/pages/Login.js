@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // for redirect after login
+import { useNavigate } from 'react-router-dom';
 import '../App.css';
 
 function Login() {
@@ -26,12 +26,10 @@ function Login() {
       setLoading(false);
 
       if (res.ok) {
-        // Save token in localStorage
         localStorage.setItem('userToken', data.token);
         localStorage.setItem('userData', JSON.stringify(data.user));
-
         alert('Login successful!');
-        navigate('/'); // Navigate to home or user dashboard
+        navigate('/');
       } else {
         alert(data.message || 'Login failed');
       }
@@ -42,49 +40,53 @@ function Login() {
   };
 
   return (
-    <>
-      {/* Company About Section */}
+    <div className="login-page-bg">
       <section className="about-company">
+        <h1>Welcome Back to <span className="highlight">ToletServKart</span>!</h1>
         <p>
-          <strong>ToletServKart</strong> is your one-stop platform to rent properties,
-          appliances, and fashion dresses easily. We connect verified sellers with genuine buyers across India,
-          helping people save money while getting quality service.
-        </p>
-        <p>
-          Login to manage your ads, track responses, and explore personalized deals.
+          Your one-stop platform to rent verified <strong>properties</strong>, <strong>home appliances</strong>, and <strong>fashion dresses</strong>.
+          Enjoy a seamless rental experience across India. Log in now to manage your listings, track responses, and discover personalized offers just for you!
         </p>
       </section>
 
-      {/* Login Form */}
-      <div className="container login-container">
-        <h2 className="login-title">Login to ToletServKart</h2>
+      <div className="login-container">
+        <h2 className="login-title">Login to Your Account</h2>
         <form className="login-form" onSubmit={handleSubmit}>
-          <input
-            type="email"
-            name="email"
-            placeholder="Email Address"
-            required
-            className="input-field"
-            onChange={handleChange}
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            required
-            className="input-field"
-            onChange={handleChange}
-          />
+         <div className="input-group">
+  <i className="fas fa-envelope"></i>
+  <input
+    type="email"
+    name="email"
+    placeholder="Email Address"
+    required
+    className="input-field"
+    onChange={handleChange}
+  />
+</div>
+
+<div className="input-group">
+  <i className="fas fa-lock"></i>
+  <input
+    type="password"
+    name="password"
+    placeholder="Password"
+    required
+    className="input-field"
+    onChange={handleChange}
+  />
+</div>
+
+
           <button type="submit" className="login-btn" disabled={loading}>
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
 
         <p className="signup-text">
-          Don't have an account? <a href="/register" className="signup-link">Register here</a>
+          New here? <a href="/register" className="signup-link">Create your free account</a>
         </p>
       </div>
-    </>
+    </div>
   );
 }
 

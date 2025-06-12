@@ -17,7 +17,9 @@ import Checkout from './pages/Checkout';
 import Notifications from './pages/Notifications';
 import AdminPanel from './pages/AdminPanel';
 import ChatPage from './pages/ChatPage';
-
+import Property from './pages/Property';
+import HomeAppliances from './pages/HomeAppliances';
+import Dresses from './pages/Dresses';
 import AboutUs from "./pages/AboutUs";
 import Contact from "./pages/Contact";
 
@@ -52,7 +54,9 @@ function App() {
         <Route path="/chat" element={<ChatPage />} />
         <Route path="/about" element={<AboutUs />} />
         <Route path="/contact" element={<Contact />} />
-
+        <Route path="/property" element={<Property />} />
+        <Route path="/home-appliances" element={<HomeAppliances />} />
+        <Route path="/dresses" element={<Dresses />} />
         {/* Owner Routes */}
         <Route path="/owner-login" element={<OwnerLogin />} />
         <Route path="/owner-register" element={<OwnerRegister />} />

@@ -29,53 +29,52 @@ function Register() {
   };
 
   return (
-    <>
-      {/* Company Info Section OUTSIDE the form container */}
-      <section className="about-company register-about">
-        <h2>Welcome to ToletServKart!</h2>
-        <p>
-          <strong>ToletServKart</strong> is your trusted platform for renting properties, appliances, and fashion dresses across India.
-          We bring together verified sellers and genuine buyers, ensuring quality service and best deals for everyone.
+    <div className="register-bg">
+      <div className="glass-card">
+        <h2 className="register-heading">🚀 Join ToletServKart</h2>
+        <p className="register-subtext">
+          Create your free account to explore listings, post ads, and unlock exciting features.
         </p>
-        <p>
-          Create your account to manage your listings, track responses, and unlock personalized offers designed just for you.
-        </p>
-      </section>
 
-      <div className="container register-container">
-        <h2 className="register-title">Create Your Account</h2>
-        <form className="register-form" onSubmit={handleSubmit}>
-          <input
-            type="text"
-            name="name"
-            placeholder="Full Name"
-            required
-            className="input-field"
-            onChange={handleChange}
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email Address"
-            required
-            className="input-field"
-            onChange={handleChange}
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            required
-            className="input-field"
-            onChange={handleChange}
-          />
-          <button type="submit" className="register-btn">Register</button>
+        <form className="register-form-modern" onSubmit={handleSubmit}>
+          <div className="input-group">
+            <i className="fas fa-user"></i>
+            <input
+              type="text"
+              name="name"
+              placeholder="Full Name"
+              required
+              onChange={handleChange}
+            />
+          </div>
+          <div className="input-group">
+            <i className="fas fa-envelope"></i>
+            <input
+              type="email"
+              name="email"
+              placeholder="Email Address"
+              required
+              onChange={handleChange}
+            />
+          </div>
+          <div className="input-group">
+            <i className="fas fa-lock"></i>
+            <input
+              type="password"
+              name="password"
+              placeholder="Create Password"
+              required
+              onChange={handleChange}
+            />
+          </div>
+          <button type="submit" className="btn-modern">Register Now</button>
         </form>
-        <p className="login-text">
-          Already have an account? <a href="/login" className="login-link">Login here</a>
+
+        <p className="login-bottom-text">
+          Already registered? <a href="/login">Login here</a>
         </p>
       </div>
-    </>
+    </div>
   );
 }
 

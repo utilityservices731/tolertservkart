@@ -9,33 +9,35 @@ const OwnerRegister = () => {
     email: "",
     password: "",
   });
+
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-
   const navigate = useNavigate();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    setErrorMsg("");  
+    setErrorMsg(""); // Clear error message when typing
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Simple validation example
     if (form.password.length < 6) {
       setErrorMsg("Password must be at least 6 characters long.");
       return;
     }
 
     setLoading(true);
+
     try {
-      await axios.post("http://localhost:5000/api/Owners/register", form);
-      alert("Owner registered successfully!");
-      navigate("/Owner-login");
+      const res = await axios.post("http://localhost:5000/api/owners/register", form); // ✅ corrected endpoint casing
+
+      alert(res.data.message || "Owner registered successfully!");
+      navigate("/owner-login"); // ✅ corrected route casing
     } catch (err) {
-      console.error(err);
-      setErrorMsg("Registration failed! Please try again.");
+      console.error("Registration error:", err);
+      const backendMsg = err.response?.data?.message;
+      setErrorMsg(backendMsg || "Registration failed! Please try again.");
     } finally {
       setLoading(false);
     }
@@ -82,14 +84,16 @@ const OwnerRegister = () => {
             required
           />
 
-          {errorMsg && <p style={{ color: "red", marginBottom: "10px" }}>{errorMsg}</p>}
+          {errorMsg && (
+            <p style={{ color: "red", marginBottom: "10px" }}>{errorMsg}</p>
+          )}
 
           <button type="submit" disabled={loading}>
             {loading ? "Registering..." : "Register as Owner"}
           </button>
 
           <p className="redirect-text">
-            Already a Owner? <a href="/Owner-login">Login here</a>
+            Already a Owner? <a href="/owner-login">Login here</a>
           </p>
         </form>
       </div>

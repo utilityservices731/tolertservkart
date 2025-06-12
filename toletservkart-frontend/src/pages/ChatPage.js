@@ -1,19 +1,50 @@
-import React, { useState } from 'react';
-import '../App.css';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import "../App.css";
 
 function ChatPage() {
-  const [messages, setMessages] = useState([
-    { id: 1, sender: 'seller', text: 'Hi! The washing machine is still available.' },
-    { id: 2, sender: 'buyer', text: 'Great! Can I visit tomorrow?' },
-    { id: 3, sender: 'seller', text: 'Sure, what time works for you?' },
-  ]);
-  const [newMsg, setNewMsg] = useState('');
+  const [messages, setMessages] = useState([]);
+  const [newMsg, setNewMsg] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const handleSend = (e) => {
+  const conversationId = "abc123"; // Replace with actual ID (from params or props)
+  const sender = "buyer"; // Or "seller", based on login info
+
+  // Fetch chat messages on mount
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const res = await axios.get(`http://localhost:5000/api/messages/${conversationId}`);
+        setMessages(res.data);
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMessages();
+  }, [conversationId]);
+
+  // Send message handler
+  const handleSend = async (e) => {
     e.preventDefault();
-    if (newMsg.trim()) {
-      setMessages([...messages, { id: Date.now(), sender: 'buyer', text: newMsg }]);
-      setNewMsg('');
+
+    if (!newMsg.trim()) return;
+
+    const msgData = {
+      conversationId,
+      sender,
+      text: newMsg,
+    };
+
+    try {
+      const res = await axios.post("http://localhost:5000/api/messages", msgData);
+      setMessages((prev) => [...prev, res.data]);
+      setNewMsg("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+      alert("Failed to send message. Please try again.");
     }
   };
 
@@ -32,13 +63,19 @@ function ChatPage() {
 
       <div className="chat-container">
         <h2 className="chat-header">Chat with Seller</h2>
-        <div className="chat-box">
-          {messages.map((msg) => (
-            <div key={msg.id} className={`chat-bubble ${msg.sender}`}>
-              {msg.text}
-            </div>
-          ))}
-        </div>
+
+        {loading ? (
+          <p>Loading messages...</p>
+        ) : (
+          <div className="chat-box">
+            {messages.map((msg) => (
+              <div key={msg.id} className={`chat-bubble ${msg.sender}`}>
+                {msg.text}
+              </div>
+            ))}
+          </div>
+        )}
+
         <form className="chat-input" onSubmit={handleSend}>
           <input
             type="text"

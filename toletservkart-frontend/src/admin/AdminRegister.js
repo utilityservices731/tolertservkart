@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios'; 
+import axios from 'axios';
 import '../App.css';
 
 function AdminRegister() {
@@ -20,7 +20,6 @@ function AdminRegister() {
       });
 
       alert(response.data.message || "Admin registered successfully");
-      // Optionally clear the form:
       setName('');
       setEmail('');
       setPassword('');
@@ -33,43 +32,56 @@ function AdminRegister() {
   };
 
   return (
-    <div className="admin-register container">
-      <h2 className="register-title">Admin Register</h2>
-      <form className="register-form" onSubmit={handleSubmit}>
-        <label htmlFor="name">Full Name</label>
-        <input 
-          id="name"
-          type="text" 
-          placeholder="Enter your full name" 
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required 
-        />
+    <div className="admin-register-page">
+      <div className="admin-info-box">
+        <h1>Welcome to Admin Panel</h1>
+        <p>Register as an admin to manage users, products, and orders from a central dashboard. Ensure all fields are correctly filled.</p>
+      </div>
 
-        <label htmlFor="email">Email Address</label>
-        <input 
-          id="email"
-          type="email" 
-          placeholder="Enter your email" 
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required 
-        />
+      <div className="admin-register-form">
+        <h2 className="register-title">Admin Registration</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="name">Full Name</label>
+            <input 
+              id="name"
+              type="text"
+              placeholder="Enter your full name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required 
+            />
+          </div>
 
-        <label htmlFor="password">Password</label>
-        <input 
-          id="password"
-          type="password" 
-          placeholder="Enter a strong password" 
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required 
-        />
+          <div className="form-group">
+            <label htmlFor="email">Email Address</label>
+            <input 
+              id="email"
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required 
+            />
+          </div>
 
-        <button type="submit" className="register-button" disabled={loading}>
-          {loading ? "Registering..." : "Register"}
-        </button>
-      </form>
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
+            <input 
+              id="password"
+              type="password"
+              placeholder="Enter a strong password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required 
+            />
+          </div>
+
+          <button type="submit" className="register-button" disabled={loading}>
+            {loading ? "Registering..." : "Register"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
