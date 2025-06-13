@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 12, 2025 at 08:43 AM
+-- Generation Time: Jun 13, 2025 at 01:51 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -101,7 +101,8 @@ CREATE TABLE `orders` (
   `city` varchar(100) DEFAULT NULL,
   `zip` varchar(20) DEFAULT NULL,
   `payment_method` varchar(50) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `user_id` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -135,12 +136,35 @@ CREATE TABLE `products` (
   `id` int(11) NOT NULL,
   `title` varchar(255) NOT NULL,
   `description` text DEFAULT NULL,
-  `category` varchar(100) DEFAULT NULL,
-  `price` decimal(10,2) DEFAULT NULL,
-  `images` text DEFAULT NULL,
-  `owner_id` int(11) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `category` varchar(100) NOT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `is_rent` tinyint(1) DEFAULT 0,
+  `rent_duration` varchar(50) DEFAULT NULL,
+  `condition` enum('New','Like New','Used') DEFAULT 'Used',
+  `images` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT '[]' CHECK (json_valid(`images`)),
+  `location` varchar(100) DEFAULT 'Lucknow',
+  `status` enum('active','sold','rented') DEFAULT 'active',
+  `owner_id` int(11) NOT NULL,
+  `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `products`
+--
+
+INSERT INTO `products` (`id`, `title`, `description`, `category`, `price`, `is_rent`, `rent_duration`, `condition`, `images`, `location`, `status`, `owner_id`, `created_at`) VALUES
+(1, 'Designer Saree', 'Red silk wedding saree', 'Women', 1200.00, 1, '3 days', 'Like New', '[\"https://via.placeholder.com/150\"]', 'Lucknow', 'active', 1, '2025-06-13 15:25:17'),
+(2, 'Men\'s Sherwani', 'Gold embroidered sherwani', 'Men', 1800.00, 0, '', 'New', '[\"https://via.placeholder.com/150\"]', 'Lucknow', 'active', 1, '2025-06-13 15:25:17'),
+(3, 'Kids Lehenga', 'Pink lehenga for 5-7 years', 'Kids', 600.00, 1, '2 days', 'Used', '[\"https://via.placeholder.com/150\"]', 'Lucknow', 'active', 1, '2025-06-13 15:25:17'),
+(4, 'Black Blazer', 'Formal blazer for men', 'Men', 900.00, 0, '', 'Like New', '[\"https://via.placeholder.com/150\"]', 'Lucknow', 'active', 1, '2025-06-13 15:25:17'),
+(5, 'Party Gown', 'Blue shiny gown for evening party', 'Women', 1500.00, 1, '5 days', 'New', '[\"https://via.placeholder.com/150\"]', 'Lucknow', 'active', 1, '2025-06-13 15:25:17'),
+(6, 'Kurta Pajama', 'Traditional white kurta set', 'Men', 400.00, 0, '', 'Used', '[\"https://via.placeholder.com/150\"]', 'Lucknow', 'active', 1, '2025-06-13 15:25:17'),
+(7, 'Wedding Dupatta', 'Heavy embroidery dupatta', 'Women', 300.00, 1, '1 day', 'Like New', '[\"https://via.placeholder.com/150\"]', 'Lucknow', 'active', 1, '2025-06-13 15:25:17'),
+(8, 'Churidar Suit', 'Elegant churidar set', 'Women', 700.00, 0, '', 'Used', '[\"https://via.placeholder.com/150\"]', 'Lucknow', 'active', 1, '2025-06-13 15:25:17'),
+(9, 'Ethnic Jacket', 'Multi-color ethnic jacket', 'Men', 500.00, 0, '', 'New', '[\"https://via.placeholder.com/150\"]', 'Lucknow', 'active', 1, '2025-06-13 15:25:17'),
+(10, 'Kid\'s Blazer', 'Formal blazer for kids', 'Kids', 350.00, 1, '2 days', 'Like New', '[\"https://via.placeholder.com/150\"]', 'Lucknow', 'active', 1, '2025-06-13 15:25:17'),
+(11, 'Silk Saree', 'Soft silk pink saree', 'Women', 1000.00, 0, '', 'New', '[\"https://via.placeholder.com/150\"]', 'Lucknow', 'active', 1, '2025-06-13 15:25:17'),
+(12, 'Tuxedo', 'Black wedding tuxedo', 'Men', 2200.00, 1, '3 days', 'Like New', '[\"https://via.placeholder.com/150\"]', 'Lucknow', 'active', 1, '2025-06-13 15:25:17');
 
 -- --------------------------------------------------------
 
@@ -241,7 +265,7 @@ ALTER TABLE `owners`
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `users`
@@ -257,7 +281,7 @@ ALTER TABLE `users`
 -- Constraints for table `products`
 --
 ALTER TABLE `products`
-  ADD CONSTRAINT `products_ibfk_1` FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`);
+  ADD CONSTRAINT `products_ibfk_1` FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
