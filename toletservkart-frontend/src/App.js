@@ -28,6 +28,12 @@ import OwnerLogin from "./owner/OwnerLogin";
 import OwnerRegister from "./owner/OwnerRegister";
 import OwnerDashboard from "./owner/OwnerDashboard";
 import PrivateRoute from "./components/PrivateRoute";
+import OwnerUploadProduct from "./owner/OwnerUploadProduct";
+import OwnerMyProducts from "./owner/OwnerMyProducts";
+import OwnerOrderRequests from "./owner/OwnerOrderRequests";
+import OwnerWallet from "./owner/OwnerWallet";
+import OwnerProfileSettings from "./owner/OwnerProfileSettings";
+import OwnerSupport from "./owner/OwnerSupport";
 
 // Admin components
 import AdminLogin from "./admin/AdminLogin";
@@ -60,6 +66,13 @@ function App() {
         {/* Owner Routes */}
         <Route path="/owner-login" element={<OwnerLogin />} />
         <Route path="/owner-register" element={<OwnerRegister />} />
+         <Route path="/owner-dashboard" element={<OwnerDashboard />} />
+    <Route path="/upload-product" element={<OwnerUploadProduct />} />
+    <Route path="/my-products" element={<OwnerMyProducts />} />
+    <Route path="/order-requests" element={<OwnerOrderRequests />} />
+    <Route path="/wallet" element={<OwnerWallet />} />
+    <Route path="/profile-settings" element={<OwnerProfileSettings />} />
+    <Route path="/support" element={<OwnerSupport />} />
         <Route
           path="/owner-dashboard"
           element={

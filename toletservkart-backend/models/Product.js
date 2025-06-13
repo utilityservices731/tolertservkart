@@ -1,20 +1,42 @@
-const mongoose = require('mongoose');
+const db = require('../config/db');
 
-const productSchema = new mongoose.Schema({
-  title: { type: String, required: true },         
-  description: { type: String, default: '' },       
-  category: { type: String, required: true },       
-  price: { type: Number, required: true },          
-  isRent: { type: Boolean, default: false },       
-  rentDuration: { type: String, default: '' },      
+exports.createProduct = async (req, res) => {
+  try {
+    const {
+      title,
+      description,
+      category,
+      price,
+      isRent,
+      rentDuration,
+      condition,
+      images,
+      location,
+    } = req.body;
 
-  condition: { type: String, enum: ['New', 'Like New', 'Used'], default: 'Used' },  
-  images: { type: [String], default: [] },         
-  location: { type: String, default: 'Lucknow' },   
-  status: { type: String, enum: ['active', 'sold', 'rented'], default: 'active' }, 
-  
-  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, 
-  createdAt: { type: Date, default: Date.now },
-});
+    const ownerId = req.user.id;
 
-module.exports = mongoose.model('Product', productSchema);
+    const [result] = await db.query(
+      `INSERT INTO products 
+       (title, description, category, price, is_rent, rent_duration, \`condition\`, images, location, status, owner_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?)`,
+      [
+        title,
+        description || '',
+        category,
+        price,
+        isRent || false,
+        rentDuration || '',
+        condition || 'Used',
+        JSON.stringify(images || []),
+        location || 'Lucknow',
+        ownerId
+      ]
+    );
+
+    res.status(201).json({ message: "Product created", productId: result.insertId });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

@@ -9,24 +9,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ---------- MySQL Connection ----------
-const db = mysql.createConnection({
+// ---------- MySQL Connection Pool ----------
+const pool = mysql.createPool({
   host: "localhost",
   user: "root",
   password: "",
   database: "toletservkart",
+  connectionLimit: 10, // handles multiple requests safely
 });
 
-db.connect((err) => {
-  if (err) {
-    console.error("MySQL connection error:", err);
-  } else {
-    console.log("✅ Connected to MySQL database.");
-  }
-});
-
-// Promisify DB queries
-const query = util.promisify(db.query).bind(db);
+const query = util.promisify(pool.query).bind(pool);
 
 // ---------- USERS REGISTER ----------
 app.post("/api/auth/register", async (req, res) => {
@@ -252,7 +244,7 @@ app.get("/api/orders/:userId", async (req, res) => {
 });
 
 // ---------- PLACE ORDER ----------
-app.post("/api/orders", async (req, res) => {
+app.post("/api/place-order", async (req, res) => {
   const { name, email, address, city, zip, paymentMethod } = req.body;
 
   if (!name || !email || !address || !city || !zip || !paymentMethod) {
@@ -272,20 +264,16 @@ app.post("/api/orders", async (req, res) => {
   }
 });
 
-// GET all listings (no filter)
-app.get('/api/listings', (req, res) => {
-  const query = 'SELECT * FROM listings';
-
-  db.query(query, (err, results) => {
-    if (err) {
-      console.error("DB error:", err);
-      return res.status(500).json({ error: 'Database error' });
-    }
+// ---------- GET ALL LISTINGS ----------
+app.get('/api/listings', async (req, res) => {
+  try {
+    const results = await query('SELECT * FROM listings');
     res.json(results);
-  });
+  } catch (err) {
+    console.error("DB error:", err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
-
-
 
 // ---------- START SERVER ----------
 const PORT = process.env.PORT || 5000;

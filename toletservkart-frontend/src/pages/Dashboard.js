@@ -24,8 +24,12 @@ function Dashboard() {
           <ul>
             <li className="active">Profile</li>
             <li>My Ads</li>
+            <li>My Orders</li>
+            <li>Favorites</li>
             <li>Messages</li>
-            <li>Logout</li>
+            <li>Post New Ad</li>
+            <li>Settings</li>
+            <li style={{ color: 'red', cursor: 'pointer' }}>Logout</li>
           </ul>
         </nav>
       </aside>
@@ -34,6 +38,7 @@ function Dashboard() {
       <main className="dashboard-main">
         <h2 className="dashboard-title">Welcome back, {user.name} 👋</h2>
 
+        {/* Profile Section */}
         <section className="profile-section">
           <h3>Profile Information</h3>
           <div className="profile-info">
@@ -41,10 +46,11 @@ function Dashboard() {
             <p><strong>Email:</strong> {user.email}</p>
           </div>
           <p className="profile-note">
-            You can manage your account and view your ads here. Keep your information updated to receive better responses.
+            You can manage your account, view orders, and edit your ads here. Keep your details up-to-date for a better experience.
           </p>
         </section>
 
+        {/* Ads Section */}
         <section className="ads-section">
           <h3>My Ads</h3>
           {userAds.length > 0 ? (

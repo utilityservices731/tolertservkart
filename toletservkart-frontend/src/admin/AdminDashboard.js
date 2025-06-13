@@ -12,57 +12,44 @@ function AdminDashboard() {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [activeSection, setActiveSection] = useState('Dashboard'); // For dynamic section
+
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const response = await axios.get('http://localhost:5000/api/admin/dashboard');
-        const data = response.data;
+    if (activeSection === 'Dashboard') {
+      const fetchDashboardData = async () => {
+        try {
+          const response = await axios.get('http://localhost:5000/api/admin/dashboard');
+          const data = response.data;
 
-        setStats({
-          totalUsers: data.totalUsers,
-          activeListings: data.activeListings,
-          pendingRequests: data.pendingRequests,
-          newMessages: data.newMessages,
-        });
+          setStats({
+            totalUsers: data.totalUsers,
+            activeListings: data.activeListings,
+            pendingRequests: data.pendingRequests,
+            newMessages: data.newMessages,
+          });
 
-        setActivities(data.recentActivities || []);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        setLoading(false);
-      }
-    };
+          setActivities(data.recentActivities || []);
+          setLoading(false);
+        } catch (error) {
+          console.error('Error fetching dashboard data:', error);
+          setLoading(false);
+        }
+      };
 
-    fetchDashboardData();
-  }, []);
+      fetchDashboardData();
+    }
+  }, [activeSection]);
 
-  // ✅ Logout handler
   const handleLogout = () => {
-    localStorage.removeItem('adminToken'); // or sessionStorage
+    localStorage.removeItem('adminToken');
     window.location.href = '/admin/login';
   };
 
-  return (
-    <div className="admin-dashboard-layout">
-      <aside className="admin-sidebar">
-        <h2>Admin Panel</h2>
-        <ul className="admin-nav">
-          <li className="active">Dashboard</li>
-          <li>Users</li>
-          <li>Listings</li>
-          <li>Requests</li>
-          <li>Messages</li>
-        </ul>
-
-        <button className="logout-button" onClick={handleLogout}>
-          Logout
-        </button>
-      </aside>
-
-      <main className="admin-main-content">
-        <h1 className="dashboard-header">Welcome, Admin 👋</h1>
-
-        {loading ? (
+  // Dummy Components for Demo Purpose
+  const renderSection = () => {
+    switch (activeSection) {
+      case 'Dashboard':
+        return loading ? (
           <p className="loading">Loading dashboard data...</p>
         ) : (
           <>
@@ -96,7 +83,62 @@ function AdminDashboard() {
               </ul>
             </div>
           </>
-        )}
+        );
+      case 'Manage Users':
+        return <p>Here you can manage all users.</p>;
+      case 'Manage Listings':
+        return <p>Here you can manage all listings.</p>;
+      case 'Approve Requests':
+        return <p>Approve or reject pending product requests.</p>;
+      case 'Messages':
+        return <p>View and respond to user messages.</p>;
+      case 'Reports':
+        return <p>View reports and flagged items.</p>;
+      case 'Settings':
+        return <p>Change application settings here.</p>;
+      default:
+        return <p>Invalid section</p>;
+    }
+  };
+
+  return (
+    <div className="admin-dashboard-layout">
+      {/* Sidebar */}
+      <aside className="admin-sidebar">
+        <div className="sidebar-header">
+          <h2>Admin Panel</h2>
+          <p>admin@example.com</p>
+        </div>
+        <nav className="admin-nav">
+          <ul>
+            {[
+              'Dashboard',
+              'Manage Users',
+              'Manage Listings',
+              'Approve Requests',
+              'Messages',
+              'Reports',
+              'Settings',
+            ].map((item) => (
+              <li
+                key={item}
+                className={activeSection === item ? 'active' : ''}
+                onClick={() => setActiveSection(item)}
+              >
+                {item}
+              </li>
+            ))}
+            <li className="logout-btn" onClick={handleLogout}>
+              Logout
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      {/* Main Content */}
+      <main className="admin-main-content">
+        <h1 className="dashboard-header">{activeSection}</h1>
+        {renderSection()}
       </main>
     </div>
   );

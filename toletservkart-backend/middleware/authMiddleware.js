@@ -1,7 +1,9 @@
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
-// General token verification
+/**
+ * Verify JWT token and attach decoded user info to req.user
+ */
 exports.verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -13,34 +15,52 @@ exports.verifyToken = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // decoded should contain: { id, email, role }
 
+    // decoded = { id, email, role, ... }
+    req.user = decoded;
     next();
   } catch (err) {
+    console.error("Token verification failed:", err.message);
     res.status(401).json({ message: "Token is not valid" });
   }
 };
 
-// Middleware to allow only Admin
+/**
+ * Allow access to Admins only
+ */
 exports.requireAdmin = (req, res, next) => {
-  if (req.user.role !== "admin") {
+  if (!req.user || req.user.role !== "admin") {
     return res.status(403).json({ message: "Access denied: Admins only." });
   }
   next();
 };
 
-// Middleware to allow only Owner
+/**
+ * Allow access to Owners only
+ */
 exports.requireOwner = (req, res, next) => {
-  if (req.user.role !== "owner") {
+  if (!req.user || req.user.role !== "owner") {
     return res.status(403).json({ message: "Access denied: Owners only." });
   }
   next();
 };
 
-// Middleware to allow only User
+/**
+ * Allow access to general Users only
+ */
 exports.requireUser = (req, res, next) => {
-  if (req.user.role !== "user") {
+  if (!req.user || req.user.role !== "user") {
     return res.status(403).json({ message: "Access denied: Users only." });
+  }
+  next();
+};
+
+/**
+ * Optional: Allow only Admin OR Owner
+ */
+exports.requireAdminOrOwner = (req, res, next) => {
+  if (!req.user || !["admin", "owner"].includes(req.user.role)) {
+    return res.status(403).json({ message: "Access denied: Admins or Owners only." });
   }
   next();
 };

@@ -1,6 +1,6 @@
 const db = require('../config/db');
 
-// ✅ Get all products (Admin or Public View)
+// ✅ 1. Get all products (Admin or Public View)
 exports.getProducts = async (req, res) => {
   try {
     const [products] = await db.query(`
@@ -8,7 +8,6 @@ exports.getProducts = async (req, res) => {
       LEFT JOIN users u ON p.owner_id = u.id
       ORDER BY p.created_at DESC
     `);
-
     res.json(products);
   } catch (error) {
     console.error("Error fetching products:", error);
@@ -16,18 +15,39 @@ exports.getProducts = async (req, res) => {
   }
 };
 
-// ✅ Create product (Owner only)
+// ✅ 2. Get logged-in owner's products
+exports.getOwnerProducts = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== 'owner') {
+      return res.status(401).json({ message: 'Only owners can access their products' });
+    }
+
+    const ownerId = req.user.id;
+
+    const [products] = await db.query(
+      `SELECT * FROM products WHERE owner_id = ? ORDER BY created_at DESC`,
+      [ownerId]
+    );
+
+    // Parse image JSON for each product
+    const parsedProducts = products.map((p) => ({
+      ...p,
+      images: p.images ? JSON.parse(p.images) : [],
+    }));
+
+    res.json(parsedProducts);
+  } catch (error) {
+    console.error("Error fetching owner's products:", error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// ✅ 3. Create product (Owner only)
 exports.createProduct = async (req, res) => {
   try {
     const { title, description, category, price, images } = req.body;
 
-    // ✅ Ensure user is logged in
-    if (!req.user || !req.user.id || !req.user.role) {
-      return res.status(401).json({ message: 'Unauthorized access' });
-    }
-
-    // ✅ Only owners allowed to create product
-    if (req.user.role !== 'owner') {
+    if (!req.user || !req.user.id || req.user.role !== 'owner') {
       return res.status(403).json({ message: 'Only owners can create products' });
     }
 
@@ -55,5 +75,30 @@ exports.createProduct = async (req, res) => {
   } catch (error) {
     console.error("Error creating product:", error);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// ✅ 4. Delete a product (Owner only)
+exports.deleteProduct = async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const ownerId = req.user.id;
+
+    // Check if the product belongs to this owner
+    const [existing] = await db.query(
+      `SELECT * FROM products WHERE id = ? AND owner_id = ?`,
+      [productId, ownerId]
+    );
+
+    if (existing.length === 0) {
+      return res.status(404).json({ message: "Product not found or unauthorized" });
+    }
+
+    await db.query(`DELETE FROM products WHERE id = ?`, [productId]);
+
+    res.json({ message: "Product deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    res.status(500).json({ message: "Server error" });
   }
 };

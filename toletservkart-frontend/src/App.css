@@ -853,7 +853,6 @@ body {
   }
 }
 
-
 /* Login Page */
 
 .login-page-bg {
@@ -2028,6 +2027,9 @@ textarea {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .owner-nav li {
@@ -2036,11 +2038,25 @@ textarea {
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  color: #e2e8f0;
+  background-color: transparent;
 }
 
+/* Active or Hovered Item */
 .owner-nav li:hover,
 .owner-nav li.active {
   background-color: #2563eb;
+  color: #fff;
+}
+
+/* Logout Button */
+.owner-nav li.logout-btn {
+  color: #f87171;
+  font-weight: bold;
+}
+
+.owner-nav li.logout-btn:hover {
+  background-color: #ef4444;
   color: #fff;
 }
 
@@ -2168,6 +2184,13 @@ textarea {
   padding: 40px;
 }
 
+.no-products-subtext {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-bottom: 30px;
+}
+
 /* Scrollbar */
 .owner-main-content::-webkit-scrollbar {
   width: 6px;
@@ -2177,7 +2200,7 @@ textarea {
   border-radius: 6px;
 }
 
-/* Responsive */
+/* Responsive Design */
 @media (max-width: 768px) {
   .owner-dashboard-layout {
     flex-direction: column;
@@ -2199,6 +2222,7 @@ textarea {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
+    justify-content: center;
   }
 
   .owner-nav li {
@@ -2787,6 +2811,7 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  justify-content: space-between;
 }
 
 /* Sidebar Title */
@@ -2801,6 +2826,7 @@ textarea {
   list-style: none;
   padding: 0;
   margin: 0;
+  flex-grow: 1;
 }
 
 .admin-nav li {
@@ -2811,6 +2837,7 @@ textarea {
   transition: background 0.3s;
   font-size: 0.95rem;
   color: #e5e7eb;
+  list-style: none;
 }
 
 .admin-nav li:hover,
@@ -2821,7 +2848,6 @@ textarea {
 
 /* Logout Button */
 .logout-button {
-  align-self: flex-start;
   padding: 10px 14px;
   background-color: #ef4444;
   color: white;
@@ -2836,7 +2862,6 @@ textarea {
   background-color: #dc2626;
 }
 
-/* Optional separator above logout */
 .logout-button::before {
   content: "";
   display: block;
@@ -2907,6 +2932,7 @@ textarea {
 }
 
 .recent-activities ul {
+  list-style: none;
   padding-left: 20px;
   color: #4b5563;
 }
@@ -2928,6 +2954,19 @@ textarea {
     flex-wrap: wrap;
     justify-content: center;
     gap: 10px;
+    padding: 15px;
+  }
+
+  .admin-nav {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .logout-button {
+    margin-top: 10px;
+    align-self: center;
   }
 
   .admin-main-content {
@@ -2938,6 +2977,7 @@ textarea {
     text-align: center;
   }
 }
+
 
 
 /* Admin Login */
@@ -3482,3 +3522,563 @@ textarea {
   }
 }
 
+/* Owner Upload Product Page */
+.upload-form-container {
+  max-width: 700px;
+  background: linear-gradient(to right, #f5f7fa, #e0ecff);
+  margin: 60px auto;
+  padding: 40px;
+  background-color: #f9f9f9;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  font-family: 'Poppins', sans-serif;
+}
+
+.upload-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #212121;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.upload-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.upload-form input[type="text"],
+.upload-form input[type="number"],
+.upload-form input[type="file"],
+.upload-form textarea,
+.upload-form select {
+  padding: 14px 18px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 15px;
+  background-color: #fff;
+  color: #333;
+  transition: border 0.3s ease, box-shadow 0.3s ease;
+}
+
+.upload-form input:focus,
+.upload-form textarea:focus,
+.upload-form select:focus {
+  border-color: #2874f0;
+  box-shadow: 0 0 0 3px rgba(40, 116, 240, 0.2);
+  outline: none;
+}
+
+.upload-form textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.upload-form select {
+  cursor: pointer;
+}
+
+.upload-form button[type="submit"] {
+  background: #2874f0;
+  color: white;
+  padding: 14px 20px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.upload-form button[type="submit"]:hover {
+  background: #1565d8;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .upload-form-container {
+    padding: 25px;
+    margin: 30px 10px;
+  }
+
+  .upload-title {
+    font-size: 22px;
+  }
+}
+
+/* OwnerMyProducts Page */
+.owner-products-page {
+  background: linear-gradient(to right, #f5f7fa, #e0ecff);
+  padding: 50px 20px;
+  min-height: 100vh;
+}
+
+.owner-myproducts-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #ffffff;
+  padding: 30px 40px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.section-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.no-products {
+  text-align: center;
+  font-size: 16px;
+  color: #777;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 25px;
+}
+
+.product-card {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+}
+
+.product-card-img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.product-card-info {
+  padding: 15px;
+  flex: 1;
+}
+
+.product-card-info h3 {
+  font-size: 18px;
+  color: #222;
+  margin-bottom: 8px;
+}
+
+.product-description {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.product-price {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2874f0;
+  margin-bottom: 5px;
+}
+
+.product-tags {
+  font-size: 12px;
+  color: #999;
+  margin-top: 5px;
+}
+
+.product-card-buttons {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 15px;
+  border-top: 1px solid #eee;
+}
+
+.edit-btn,
+.delete-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.edit-btn {
+  background-color: #ff9800;
+  color: #fff;
+}
+
+.edit-btn:hover {
+  background-color: #fb8c00;
+}
+
+.delete-btn {
+  background-color: #f44336;
+  color: #fff;
+}
+
+.delete-btn:hover {
+  background-color: #d32f2f;
+}
+
+
+/*  OwnerOrderRequests page */
+
+.owner-orders-container {
+  padding: 2rem;
+  background: linear-gradient(to right, #f5f7fa, #e0ecff);
+}
+
+.order-list {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.order-card {
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+  padding: 1.2rem;
+  transition: all 0.3s ease;
+}
+
+.order-info h3 {
+  margin-bottom: 0.5rem;
+}
+
+.order-info p {
+  margin: 4px 0;
+  font-size: 0.95rem;
+}
+
+.status-accepted {
+  color: green;
+  font-weight: bold;
+}
+.status-rejected {
+  color: red;
+  font-weight: bold;
+}
+.status-pending {
+  color: orange;
+  font-weight: bold;
+}
+
+.order-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.accept-btn,
+.reject-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.accept-btn {
+  background-color: #2e7d32;
+}
+
+.reject-btn {
+  background-color: #c62828;
+}
+
+/* OwnerWallet page */
+
+.wallet-container {
+  max-width: 900px;
+  background: linear-gradient(to right, #f5f7fa, #e0ecff);
+  margin: 50px auto;
+  padding: 30px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07);
+  font-family: 'Poppins', sans-serif;
+}
+
+.section-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #212121;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.wallet-sections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+
+.wallet-card {
+  flex: 1;
+  padding: 20px;
+  background-color: #f5f7fa;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.balance-card h3 {
+  font-size: 22px;
+  margin-bottom: 12px;
+  color: #2e7d32;
+}
+
+.wallet-amount {
+  font-size: 32px;
+  font-weight: bold;
+  color: #2e7d32;
+  margin: 10px 0 20px;
+}
+
+.withdraw-btn {
+  padding: 12px 20px;
+  background: #2874f0;
+  color: white;
+  font-size: 16px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.withdraw-btn:hover {
+  background: #0f66d0;
+}
+
+.info-card h4 {
+  font-size: 18px;
+  margin-bottom: 10px;
+  color: #444;
+}
+
+.wallet-transactions h3 {
+  font-size: 22px;
+  margin-bottom: 20px;
+  color: #212121;
+}
+
+.transaction-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.transaction-table th,
+.transaction-table td {
+  padding: 14px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.transaction-table th {
+  background-color: #f1f1f1;
+  font-weight: 600;
+  color: #333;
+}
+
+.credit {
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+.debit {
+  color: #c62828;
+  font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  .wallet-sections {
+    flex-direction: column;
+  }
+
+  .wallet-card {
+    width: 100%;
+  }
+}
+
+
+/* OwnerProfileSettings Page */
+/* Profile Page Styling */
+.profile-page {
+  background: linear-gradient(to right, #f0f4ff, #e8f0fe);
+  min-height: 100vh;
+  padding: 50px 20px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.profile-settings-container {
+  max-width: 600px;
+  background-color: #fff;
+  margin: 0 auto;
+  padding: 30px 35px;
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+}
+
+.section-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.profile-form label {
+  font-weight: 500;
+  color: #444;
+  margin-top: 20px;
+  display: block;
+}
+
+.profile-form input {
+  width: 100%;
+  padding: 12px 15px;
+  margin-top: 8px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+.save-profile-btn {
+  width: 100%;
+  background-color: #2874f0;
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  margin-top: 25px;
+  transition: background 0.3s ease;
+}
+
+.save-profile-btn:hover {
+  background-color: #185ad2;
+}
+
+.profile-message {
+  margin-top: 20px;
+  font-size: 15px;
+  text-align: center;
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+/* OwnerSupport Page */
+
+.support-page {
+  background: linear-gradient(to right, #f5f7fa, #e0ecff);
+  padding: 50px 20px;
+  min-height: 100vh;
+  font-family: 'Poppins', sans-serif;
+}
+
+.support-container {
+  max-width: 700px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07);
+}
+
+.section-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.dashboard-subtext {
+  font-size: 15px;
+  color: #555;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.support-form label {
+  font-weight: 500;
+  color: #333;
+  display: block;
+  margin-top: 20px;
+}
+
+.support-form input,
+.support-form textarea {
+  width: 100%;
+  padding: 12px 15px;
+  margin-top: 8px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 15px;
+}
+
+.send-support-btn {
+  margin-top: 25px;
+  width: 100%;
+  background-color: #2874f0;
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.send-support-btn:hover {
+  background-color: #185ad2;
+}
+
+.support-success-msg {
+  margin-top: 20px;
+  color: #2e7d32;
+  font-weight: 600;
+  text-align: center;
+}
+
+.faq-section {
+  max-width: 1000px;
+  margin: 50px auto 0;
+  background: #fff;
+  padding: 25px;
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+.faq-section h3 {
+  font-size: 20px;
+  margin-bottom: 15px;
+  color: #34495e;
+}
+
+.faq-section ul {
+  list-style-type: '👉 ';
+  padding-left: 20px;
+  color: #555;
+}
+
+.faq-section ul li {
+  margin-bottom: 10px;
+}
+
+.faq-section .note {
+  margin-top: 15px;
+  font-style: italic;
+  font-size: 14px;
+  color: #666;
+}
