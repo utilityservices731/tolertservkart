@@ -34,11 +34,20 @@ import OwnerOrderRequests from "./owner/OwnerOrderRequests";
 import OwnerWallet from "./owner/OwnerWallet";
 import OwnerProfileSettings from "./owner/OwnerProfileSettings";
 import OwnerSupport from "./owner/OwnerSupport";
-
+import OwnerMyOrders from "./owner/OwnerMyOrders";
 // Admin components
 import AdminLogin from "./admin/AdminLogin";
 import AdminRegister from "./admin/AdminRegister";
 import AdminDashboard from "./admin/AdminDashboard";
+import AdminManageUsers from './admin/AdminManageUsers';
+import AdminManageListings from './admin/AdminManageListings';
+import AdminApproveRequests from './admin/AdminApproveRequests';
+import AdminMessages from './admin/AdminMessages';
+import AdminReports from './admin/AdminReports';
+import AdminPaymentHistory from './admin/AdminPaymentHistory';
+import AdminFeedbacks from './admin/AdminFeedbacks';
+import AdminNotifications from './admin/AdminNotifications';
+import AdminSettings from './admin/AdminSettings';
 
 function App() {
   return (
@@ -73,6 +82,7 @@ function App() {
     <Route path="/wallet" element={<OwnerWallet />} />
     <Route path="/profile-settings" element={<OwnerProfileSettings />} />
     <Route path="/support" element={<OwnerSupport />} />
+     <Route path="/my-orders" element={<OwnerMyOrders />} />
         <Route
           path="/owner-dashboard"
           element={
@@ -86,6 +96,15 @@ function App() {
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/admin-register" element={<AdminRegister />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
+           <Route path="/admin/manage-users" element={<AdminManageUsers />} />
+      <Route path="/admin/manage-listings" element={<AdminManageListings />} />
+      <Route path="/admin/approve-requests" element={<AdminApproveRequests />} />
+      <Route path="/admin/messages" element={<AdminMessages />} />
+      <Route path="/admin/reports" element={<AdminReports />} />
+      <Route path="/admin/payment-history" element={<AdminPaymentHistory />} />
+      <Route path="/admin/feedbacks" element={<AdminFeedbacks />} />
+      <Route path="/admin/notifications" element={<AdminNotifications />} />
+      <Route path="/admin/settings" element={<AdminSettings />} />
       </Routes>
       <Footer />
     </Router>

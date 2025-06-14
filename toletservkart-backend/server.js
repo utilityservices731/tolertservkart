@@ -3,7 +3,8 @@ const cors = require("cors");
 const mysql = require("mysql");
 const util = require("util");
 const jwt = require("jsonwebtoken");
-require("dotenv").config();
+require('dotenv').config();
+
 
 const app = express();
 app.use(cors());
@@ -13,9 +14,9 @@ app.use(express.json());
 const pool = mysql.createPool({
   host: "localhost",
   user: "root",
-  password: "",
+  password: "Ranju@8482",
   database: "toletservkart",
-  connectionLimit: 10, // handles multiple requests safely
+  connectionLimit: 10,
 });
 
 const query = util.promisify(pool.query).bind(pool);
@@ -67,7 +68,7 @@ app.post("/api/auth/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      { id: user.id, email: user.email, role: "user" },
       process.env.JWT_SECRET || "your_jwt_secret_key",
       { expiresIn: "7d" }
     );
@@ -130,7 +131,7 @@ app.post("/api/owners/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: owner.id, email: owner.email },
+      { id: owner.id, email: owner.email, role: "owner" },
       process.env.JWT_SECRET || "your_jwt_secret_key",
       { expiresIn: "7d" }
     );
@@ -193,7 +194,7 @@ app.post("/api/admins/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: admin.id, email: admin.email },
+      { id: admin.id, email: admin.email, role: "admin" },
       process.env.JWT_SECRET || "your_jwt_secret_key",
       { expiresIn: "7d" }
     );
@@ -274,6 +275,62 @@ app.get('/api/listings', async (req, res) => {
     res.status(500).json({ error: 'Database error' });
   }
 });
+
+// ---------- ADMINS DASHBOARD DATA ----------
+app.get("/api/admins/dashboard", async (req, res) => {
+  try {
+    const [userCount] = await query('SELECT COUNT(*) AS totalUsers FROM users');
+    const [listingCount] = await query('SELECT COUNT(*) AS activeListings FROM products WHERE status = "active"');
+
+    let pendingCount = { pendingRequests: 0 };
+    try {
+      [pendingCount] = await query('SELECT COUNT(*) AS pendingRequests FROM owner_requests WHERE status = "pending"');
+    } catch (err) {
+      console.warn('Skipping owner_requests query:', err.message);
+    }
+
+    let messageCount = { newMessages: 0 };
+    try {
+      [messageCount] = await query('SELECT COUNT(*) AS newMessages FROM messages WHERE is_read = 0');
+    } catch (err) {
+      console.warn('Skipping messages query:', err.message);
+    }
+
+    const recentActivities = [
+      'User JohnDoe registered',
+      'New property listing uploaded',
+      'Owner request approved',
+      'Admin updated system settings',
+    ];
+
+    res.json({
+      totalUsers: userCount.totalUsers,
+      activeListings: listingCount.activeListings,
+      pendingRequests: pendingCount.pendingRequests,
+      newMessages: messageCount.newMessages,
+      recentActivities,
+    });
+  } catch (err) {
+    console.error("Dashboard error:", err);
+    res.status(500).json({ message: "Failed to fetch dashboard data", error: err.message });
+  }
+});
+
+
+// =======================
+// In your server.js or routes file
+// =======================
+// ✅ Route: Get all users
+app.get('/api/admin/users', async (req, res) => {
+  try {
+    const users = await query('SELECT id, name, email, role, status FROM users');
+    res.json(users);
+  } catch (err) {
+    console.error('Error fetching users:', err);
+    res.status(500).json({ message: 'Failed to fetch users' });
+  }
+});
+
 
 // ---------- START SERVER ----------
 const PORT = process.env.PORT || 5000;

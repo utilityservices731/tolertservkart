@@ -4,27 +4,27 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "../App.css";
 
 
-const OwnerWallet = () => {
+const OwnerMyOrders = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const token = localStorage.getItem("token");
   const storedInfo = JSON.parse(localStorage.getItem("ownerInfo"));
 
-  const [balance, setBalance] = useState(0);
-  const [transactions, setTransactions] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/wallet", {
-        headers: { Authorization: `Bearer ${token}` },
+      .get("http://localhost:5000/api/orders/my-orders", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       })
       .then((res) => {
-        setBalance(res.data.balance || 0);
-        setTransactions(res.data.transactions || []);
+        setOrders(res.data || []);
       })
       .catch((err) => {
-        console.error("Wallet fetch error:", err);
+        console.error("My Orders fetch error:", err);
       })
       .finally(() => setLoading(false));
   }, [token]);
@@ -78,57 +78,38 @@ const OwnerWallet = () => {
 
       {/* Main Content */}
       <main className="owner-main-content">
-        <div className="wallet-container">
-          <h2 className="section-title">💰 My Wallet</h2>
+        <div className="my-orders-container">
+          <h2 className="section-title">📦 My Orders</h2>
 
           {loading ? (
-            <p>Loading wallet details...</p>
+            <p>Loading orders...</p>
+          ) : orders.length === 0 ? (
+            <p>No orders found.</p>
           ) : (
-            <>
-              <div className="wallet-sections">
-                <div className="wallet-card balance-card">
-                  <h3>Available Balance</h3>
-                  <p className="wallet-amount">₹{balance.toFixed(2)}</p>
-                  <button className="withdraw-btn">Withdraw</button>
-                </div>
-
-                <div className="wallet-card info-card">
-                  <h4>💡 Tips</h4>
-                  <p>You can withdraw funds if balance exceeds ₹100.</p>
-                  <p>Withdrawals are processed within 24-48 hours.</p>
-                </div>
-              </div>
-
-              <div className="wallet-transactions">
-                <h3>📜 Transaction History</h3>
-                {transactions.length === 0 ? (
-                  <p>No transactions yet.</p>
-                ) : (
-                  <table className="transaction-table">
-                    <thead>
-                      <tr>
-                        <th>Date</th>
-                        <th>Description</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {transactions.map((txn, index) => (
-                        <tr key={index}>
-                          <td>{new Date(txn.date).toLocaleDateString()}</td>
-                          <td>{txn.description}</td>
-                          <td className={txn.type === "credit" ? "credit" : "debit"}>
-                            {txn.type === "credit" ? "+" : "-"}₹{txn.amount}
-                          </td>
-                          <td>{txn.status}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-            </>
+            <table className="order-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orders.map((order, idx) => (
+                  <tr key={idx}>
+                    <td>{order.product?.title}</td>
+                    <td>{order.product?.category}</td>
+                    <td>₹{order.product?.price}</td>
+                    <td>{order.product?.type}</td>
+                    <td>{order.status}</td>
+                    <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
       </main>
@@ -136,4 +117,4 @@ const OwnerWallet = () => {
   );
 };
 
-export default OwnerWallet;
+export default OwnerMyOrders;

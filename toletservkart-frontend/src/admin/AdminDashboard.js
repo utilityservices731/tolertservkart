@@ -11,134 +11,127 @@ function AdminDashboard() {
   });
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeSection, setActiveSection] = useState('Dashboard');
 
-  const [activeSection, setActiveSection] = useState('Dashboard'); // For dynamic section
+  const token = localStorage.getItem('adminToken');
 
   useEffect(() => {
     if (activeSection === 'Dashboard') {
       const fetchDashboardData = async () => {
         try {
-          const response = await axios.get('http://localhost:5000/api/admin/dashboard');
-          const data = response.data;
+          const res = await axios.get('http://localhost:5000/api/admins/dashboard', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
 
+          const data = res.data;
           setStats({
             totalUsers: data.totalUsers,
             activeListings: data.activeListings,
             pendingRequests: data.pendingRequests,
             newMessages: data.newMessages,
           });
-
           setActivities(data.recentActivities || []);
-          setLoading(false);
-        } catch (error) {
-          console.error('Error fetching dashboard data:', error);
+        } catch (err) {
+          console.error('Dashboard fetch error:', err);
+        } finally {
           setLoading(false);
         }
       };
 
       fetchDashboardData();
     }
-  }, [activeSection]);
+  }, [activeSection, token]);
 
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
     window.location.href = '/admin/login';
   };
 
-  // Dummy Components for Demo Purpose
   const renderSection = () => {
     switch (activeSection) {
       case 'Dashboard':
         return loading ? (
-          <p className="loading">Loading dashboard data...</p>
+          <p className="loading-text">Loading dashboard...</p>
         ) : (
           <>
-            <div className="stats-grid">
-              <div className="stat-card">
-                <h3>Total Users</h3>
+            <div className="admin-stats-grid">
+              <div className="admin-card">
+                <h4>Total Users</h4>
                 <p>{stats.totalUsers}</p>
               </div>
-              <div className="stat-card">
-                <h3>Active Listings</h3>
+              <div className="admin-card">
+                <h4>Active Listings</h4>
                 <p>{stats.activeListings}</p>
               </div>
-              <div className="stat-card">
-                <h3>Pending Requests</h3>
+              <div className="admin-card">
+                <h4>Pending Requests</h4>
                 <p>{stats.pendingRequests}</p>
               </div>
-              <div className="stat-card">
-                <h3>New Messages</h3>
+              <div className="admin-card">
+                <h4>New Messages</h4>
                 <p>{stats.newMessages}</p>
               </div>
             </div>
 
-            <div className="recent-activities">
-              <h2>Recent Activities</h2>
-              <ul>
-                {activities.length > 0 ? (
-                  activities.map((activity, i) => <li key={i}>{activity}</li>)
-                ) : (
-                  <li>No recent activities</li>
-                )}
-              </ul>
+            <div className="admin-activities">
+              <h3>📝 Recent Activities</h3>
+              {activities.length > 0 ? (
+                <ul className="activity-list">
+                  {activities.map((activity, i) => (
+                    <li key={i}>{activity}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p>No recent activity</p>
+              )}
             </div>
           </>
         );
-      case 'Manage Users':
-        return <p>Here you can manage all users.</p>;
-      case 'Manage Listings':
-        return <p>Here you can manage all listings.</p>;
-      case 'Approve Requests':
-        return <p>Approve or reject pending product requests.</p>;
-      case 'Messages':
-        return <p>View and respond to user messages.</p>;
-      case 'Reports':
-        return <p>View reports and flagged items.</p>;
-      case 'Settings':
-        return <p>Change application settings here.</p>;
+
       default:
-        return <p>Invalid section</p>;
+        return <p>This section is under construction: {activeSection}</p>;
     }
   };
 
+  const sidebarItems = [
+    'Dashboard',
+    'Manage Users',
+    'Manage Listings',
+    'Approve Requests',
+    'Messages',
+    'Reports',
+    'Payment History',
+    'Feedbacks',
+    'Notifications',
+    'Settings',
+  ];
+
   return (
-    <div className="admin-dashboard-layout">
-      {/* Sidebar */}
+    <div className="admin-dashboard">
       <aside className="admin-sidebar">
-        <div className="sidebar-header">
+        <div className="admin-sidebar-header">
           <h2>Admin Panel</h2>
           <p>admin@example.com</p>
         </div>
         <nav className="admin-nav">
-          <ul>
-            {[
-              'Dashboard',
-              'Manage Users',
-              'Manage Listings',
-              'Approve Requests',
-              'Messages',
-              'Reports',
-              'Settings',
-            ].map((item) => (
-              <li
-                key={item}
-                className={activeSection === item ? 'active' : ''}
-                onClick={() => setActiveSection(item)}
-              >
-                {item}
-              </li>
-            ))}
-            <li className="logout-btn" onClick={handleLogout}>
-              Logout
-            </li>
-          </ul>
+          {sidebarItems.map((item) => (
+            <div
+              key={item}
+              className={`admin-nav-link ${activeSection === item ? 'active' : ''}`}
+              onClick={() => setActiveSection(item)}
+            >
+              {item}
+            </div>
+          ))}
+          <div className="admin-nav-link logout" onClick={handleLogout}>
+            🚪 Logout
+          </div>
         </nav>
       </aside>
 
-      {/* Main Content */}
-      <main className="admin-main-content">
-        <h1 className="dashboard-header">{activeSection}</h1>
-        {renderSection()}
+      <main className="admin-main">
+        <h1 className="admin-main-title">{activeSection}</h1>
+        <div className="admin-main-section">{renderSection()}</div>
       </main>
     </div>
   );
