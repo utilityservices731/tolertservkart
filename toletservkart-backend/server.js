@@ -5,21 +5,22 @@ const util = require("util");
 const jwt = require("jsonwebtoken");
 require('dotenv').config();
 
-
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
 // ---------- MySQL Connection Pool ----------
-const pool = mysql.createPool({
+const db = mysql.createPool({
   host: "localhost",
   user: "root",
   password: "Ranju@8482",
   database: "toletservkart",
-  connectionLimit: 10,
+  // connectionLimit: 10,
 });
 
-const query = util.promisify(pool.query).bind(pool);
+// ✅ Fixed this line:
+const query = util.promisify(db.query).bind(db);
 
 // ---------- USERS REGISTER ----------
 app.post("/api/auth/register", async (req, res) => {
@@ -329,6 +330,193 @@ app.get('/api/admin/users', async (req, res) => {
     console.error('Error fetching users:', err);
     res.status(500).json({ message: 'Failed to fetch users' });
   }
+});
+
+
+// ✅ GET: /api/category-wise-products
+app.get("/api/category-wise-products", (req, res) => {
+  const query = `
+    SELECT 
+      category,
+      id,
+      title AS name,
+      image,
+      price
+    FROM listings
+    WHERE verified = 1
+    ORDER BY id DESC
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("Error fetching listings:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    const grouped = {};
+    results.forEach(item => {
+      const category = item.category;
+      if (!grouped[category]) {
+        grouped[category] = [];
+      }
+
+      if (grouped[category].length < 4) {
+        grouped[category].push({
+          id: item.id,
+          name: item.name,
+          image: item.image,
+          price: item.price
+        });
+      }
+    });
+
+    res.json(grouped);
+  });
+});
+
+
+
+
+// ✅ GET: /api/latest-listings
+app.get("/api/latest-listings", (req, res) => {
+  const query = `
+    SELECT 
+      id, title, description, image, price, location
+    FROM listings
+    WHERE verified = 1
+    ORDER BY id DESC
+    LIMIT 8
+  `;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("Error fetching latest listings:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    res.json(results);
+  });
+});
+
+// backend index.js or server.js
+app.get('/api/all-products', async (req, res) => {
+  try {
+    const products = await query('SELECT * FROM products WHERE available = true');
+    res.json(products);
+  } catch (err) {
+    console.error('❌ Error fetching products:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// 👉 GET a product by ID
+// Single product from `products` table by ID
+app.get('/api/product/:id', (req, res) => {
+  const { id } = req.params;
+  const query = 'SELECT * FROM products WHERE id = ? AND verified = 1';
+
+  db.query(query, [id], (err, results) => {
+    if (err) {
+      console.error("Error fetching product:", err);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    res.json(results[0]);
+  });
+});
+
+
+app.get('/api/listings/:id', (req, res) => {
+  const listingId = req.params.id;
+
+  const query = 'SELECT * FROM listings WHERE id = ? AND verified = 1';
+  db.query(query, [listingId], (err, results) => {
+    if (err) {
+      console.error('MySQL error:', err);
+      return res.status(500).json({ message: 'Server error' });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ message: 'Listing not found' });
+    }
+
+    res.json(results[0]);
+  });
+});
+
+app.get('/api/products', async (req, res) => {
+  const products = await Product.find(); // or filter by category etc.
+  res.json(products);
+});
+
+// ✅ Place Order API (Only if logged in)
+// Protected Route - Place Order
+app.post('/api/orders', (req, res) => {
+  const userHeader = req.headers['x-user'];
+  if (!userHeader) {
+    console.log("❌ No user header received.");
+    return res.status(401).json({ message: 'Unauthorized: Login required' });
+  }
+
+  let user;
+  try {
+    user = JSON.parse(userHeader);
+    if (!user.id) throw new Error("Missing user id");
+  } catch (error) {
+    console.log("❌ Invalid user header:", error.message);
+    return res.status(400).json({ message: 'Invalid user data in header' });
+  }
+
+  const { name, email, address, city, zip, paymentMethod, cartItems = [] } = req.body;
+
+  console.log("📥 Order received from user:", user);
+  console.log("📦 Order body:", req.body);
+
+// 🛠 Debug logs for validation
+console.log("🛠 name:", name);
+console.log("🛠 email:", email);
+console.log("🛠 address:", address);
+console.log("🛠 city:", city);
+console.log("🛠 zip:", zip);
+console.log("🛠 paymentMethod:", paymentMethod);
+console.log("🛠 cartItems:", cartItems);
+console.log("🛠 cartItems.length:", cartItems.length);
+
+  if (!name || !email || !address || !city || !zip || !paymentMethod || !cartItems.length) {
+    console.log("❌ Missing fields in request body");
+    return res.status(400).json({ message: 'Missing required fields or empty cart' });
+  }
+
+  const sql = `
+    INSERT INTO orders 
+    (user_id, name, email, address, city, zip, payment_method, cart_items)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  const values = [
+    user.id,
+    name,
+    email,
+    address,
+    city,
+    zip,
+    paymentMethod,
+    JSON.stringify(cartItems)
+  ];
+
+  db.query(sql, values, (err, result) => {
+    if (err) {
+      console.error('❌ Order insertion error:', err);
+      return res.status(500).json({ message: 'Failed to place order' });
+    }
+
+    console.log('✅ Order inserted with ID:', result.insertId);
+    res.status(201).json({ message: '✅ Order placed successfully!', orderId: result.insertId });
+  });
 });
 
 

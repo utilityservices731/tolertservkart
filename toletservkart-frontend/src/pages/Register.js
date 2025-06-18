@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import 'bootstrap/dist/css/bootstrap.min.css';
 import '../App.css';
 
 function Register() {
@@ -7,6 +11,8 @@ function Register() {
     email: '',
     password: ''
   });
+
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -23,58 +29,80 @@ function Register() {
 
       const data = await res.json();
       alert(data.message);
+
+      if (res.ok) {
+        navigate('/login');
+      }
     } catch (err) {
-      alert('Something went wrong. Please try again.');
+      alert('❌ Something went wrong. Please try again.');
     }
   };
 
   return (
-    <div className="register-bg">
-      <div className="glass-card">
-        <h2 className="register-heading">🚀 Join ToletServKart</h2>
-        <p className="register-subtext">
-          Create your free account to explore listings, post ads, and unlock exciting features.
-        </p>
+    <>
+      <Header />
 
-        <form className="register-form-modern" onSubmit={handleSubmit}>
-          <div className="input-group">
-            <i className="fas fa-user"></i>
-            <input
-              type="text"
-              name="name"
-              placeholder="Full Name"
-              required
-              onChange={handleChange}
-            />
-          </div>
-          <div className="input-group">
-            <i className="fas fa-envelope"></i>
-            <input
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              required
-              onChange={handleChange}
-            />
-          </div>
-          <div className="input-group">
-            <i className="fas fa-lock"></i>
-            <input
-              type="password"
-              name="password"
-              placeholder="Create Password"
-              required
-              onChange={handleChange}
-            />
-          </div>
-          <button type="submit" className="btn-modern">Register Now</button>
-        </form>
+      <div className="container py-5">
+        <div className="row justify-content-center align-items-center">
+          <div className="col-md-6 col-lg-5">
+            <div className="card shadow border-0 p-4 rounded-4">
+              <h2 className="text-center mb-3 text-primary">🚀 Join ToletServKart</h2>
+              <p className="text-center text-muted">
+                Create your free account to explore listings, post ads, and unlock exciting features.
+              </p>
 
-        <p className="login-bottom-text">
-          Already registered? <a href="/login">Login here</a>
-        </p>
+              <form onSubmit={handleSubmit}>
+                <div className="mb-3">
+                  <label className="form-label">Full Name</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="name"
+                    placeholder="Enter your full name"
+                    required
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Email Address</label>
+                  <input
+                    type="email"
+                    className="form-control"
+                    name="email"
+                    placeholder="you@example.com"
+                    required
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label className="form-label">Create Password</label>
+                  <input
+                    type="password"
+                    className="form-control"
+                    name="password"
+                    placeholder="********"
+                    required
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <button type="submit" className="btn btn-primary w-100 mt-2">Register Now</button>
+              </form>
+
+              <div className="text-center mt-3">
+                <p className="mb-0">
+                  Already registered? <a href="/login">Login here</a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+
+      <Footer />
+    </>
   );
 }
 

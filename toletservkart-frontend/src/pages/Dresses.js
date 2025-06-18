@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "../App.css";
 
 const Dresses = () => {
+  const navigate = useNavigate();
+
   const defaultProducts = [
     {
       id: 1,
@@ -60,6 +63,20 @@ const Dresses = () => {
     fetchProducts();
   }, []);
 
+  // ✅ Add to Cart Logic
+  const handleAddToCart = (product) => {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const exists = cart.find((item) => item.id === product.id);
+    if (!exists) {
+      cart.push(product);
+      localStorage.setItem("cart", JSON.stringify(cart));
+      alert("✔️ Added to cart!");
+    } else {
+      alert("⚠️ Already in cart.");
+    }
+    navigate("/cart");
+  };
+
   return (
     <div className="dresses-page">
       <h2 className="dresses-heading">Discover Trendy Dresses</h2>
@@ -71,7 +88,9 @@ const Dresses = () => {
             <img src={product.image} alt={product.title} className="product-image" />
             <h3 className="product-title">{product.title}</h3>
             <p className="product-price">{product.price}</p>
-            <button className="product-btn">View Details</button>
+            <button className="product-btn" onClick={() => handleAddToCart(product)}>
+              🛒 Rent Now
+            </button>
           </div>
         ))}
       </div>

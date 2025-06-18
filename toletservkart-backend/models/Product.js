@@ -34,6 +34,7 @@ exports.createProduct = async (req, res) => {
       ]
     );
 
+
     res.status(201).json({ message: "Product created", productId: result.insertId });
   } catch (error) {
     console.error("Error:", error);

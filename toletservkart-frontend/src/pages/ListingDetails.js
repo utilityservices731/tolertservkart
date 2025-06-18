@@ -1,69 +1,142 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import '../App.css';
+import axios from 'axios';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 function ListingDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [data, setData] = useState(null);
+  const [listing, setListing] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [quantity, setQuantity] = useState(1); // Default rental months
 
   useEffect(() => {
-    // Replace this URL with your actual backend API
-    fetch(`http://localhost:5000/api/products/${id}`)
-      .then((res) => res.json())
-      .then((product) => {
-        product.location = 'Lucknow'; // Force location to Lucknow
-        setData(product);
+    axios
+      .get(`http://localhost:5000/api/listings/${id}`)
+      .then((res) => {
+        setListing(res.data);
+        setLoading(false);
       })
       .catch((err) => {
-        console.error('Error fetching product:', err);
-        setData(null);
+        console.error('Error fetching listing:', err);
+        setLoading(false);
       });
   }, [id]);
 
-  if (!data) {
+ const handleAddToCart = () => {
+  const cart = JSON.parse(localStorage.getItem('cart')) || [];
+  const exists = cart.find((item) => item.id === String(listing._id)); // 🔁 fix comparison
+
+  if (!exists) {
+    cart.push({
+      id: String(listing._id), // ✅ store as string for safety
+      title: listing.title,
+      image: listing.image,
+      price: listing.price,
+      months: quantity,
+      total: listing.price * quantity,
+    });
+    localStorage.setItem('cart', JSON.stringify(cart));
+    alert(`✔️ Added to cart for ${quantity} month(s)`);
+    navigate('/cart');
+  } else {
+    alert('⚠️ Already in cart');
+  }
+};
+
+
+  const increment = () => setQuantity((prev) => prev + 1);
+  const decrement = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+
+  if (loading) {
     return (
-      <div className="container">
-        <h2 className="not-found">Listing not found</h2>
+      <div className="container text-center mt-5">
+        <div className="spinner-border text-primary" role="status"></div>
+        <p className="mt-3">Loading listing details...</p>
       </div>
     );
   }
 
+  if (!listing) {
+    return (
+      <>
+        <Header />
+        <div className="container text-center py-5">
+          <h4 className="text-danger">❌ Listing not found</h4>
+          <button className="btn btn-secondary mt-3" onClick={() => navigate(-1)}>
+            ⬅ Back
+          </button>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
   return (
-    <div className="listing-details container">
-      <img
-        className="listing-image"
-        src={
-          data.image
-            ? `http://localhost:5000/uploads/${data.image}`
-            : 'https://via.placeholder.com/600x350?text=No+Image'
-        }
-        alt={data.title}
-      />
+    <>
+      <Header />
+      <div className="container py-5">
+        <div className="row g-5 align-items-start">
+          {/* 📸 Image */}
+          <div className="col-md-6">
+            <img
+              src={listing.image || 'https://via.placeholder.com/600x400?text=No+Image'}
+              alt={listing.title}
+              className="img-fluid rounded shadow-sm"
+              style={{ maxHeight: '500px', objectFit: 'cover', width: '100%' }}
+            />
+          </div>
 
-      <h2 className="listing-title">{data.title}</h2>
+          {/* 📄 Details */}
+          <div className="col-md-6">
+            <h2 className="fw-bold mb-3">{listing.title}</h2>
+            <p className="fs-4 text-success mb-2">₹{parseInt(listing.price).toLocaleString('en-IN')} / month</p>
+            <p className="text-muted">📍 {listing.location || 'Location not specified'}</p>
 
-      <div className="listing-info">
-        <p className="price">💰 <strong>{data.price}</strong></p>
-        <p className="location">📍 <strong>{data.location}</strong></p>
+            <hr />
+            <p className="mb-4">{listing.description || 'No description provided by the seller.'}</p>
+
+            {/* 🔢 Quantity Controls */}
+            <div className="d-flex align-items-center gap-3 mb-4">
+              <strong>📅 Rent Duration:</strong>
+              <button className="btn btn-outline-dark" onClick={decrement}>−</button>
+              <span className="fs-5">{quantity} month(s)</span>
+              <button className="btn btn-outline-dark" onClick={increment}>+</button>
+            </div>
+
+            {/* 🛒 Buttons */}
+            <div className="d-flex flex-wrap gap-3 mb-4">
+              <button className="btn btn-warning btn-lg" onClick={handleAddToCart}>
+                🛒 Rent Now
+              </button>
+              <button className="btn btn-outline-secondary btn-lg" onClick={() => navigate(-1)}>
+                ⬅ Back
+              </button>
+            </div>
+
+            {/* 📞 Contact Seller */}
+            <div className="mt-4">
+              <h5 className="fw-bold mb-3">📞 Contact Seller</h5>
+              <p><strong>Name:</strong> {listing.sellerName || 'Ranjana Chaursiya'}</p>
+              <p>
+                <strong>Phone:</strong>{' '}
+                <a href={`tel:${listing.sellerPhone || '+919876543210'}`} className="text-decoration-none">
+                  {listing.sellerPhone || '+91-9876543210'}
+                </a>
+              </p>
+              <p>
+                <strong>Email:</strong>{' '}
+                <a href={`mailto:${listing.sellerEmail || 'seller@example.com'}`} className="text-decoration-none">
+                  {listing.sellerEmail || 'seller@example.com'}
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
-
-      <p className="listing-description">{data.description}</p>
-
-      {data.highlights && data.highlights.length > 0 && (
-        <ul className="listing-highlights">
-          {data.highlights.map((point, index) => (
-            <li key={index}>✅ {point}</li>
-          ))}
-        </ul>
-      )}
-
-      <div className="contact-section">
-        <button className="contact-btn">📞 Contact Seller</button>
-        <p className="contact-note">You’ll be redirected to seller's contact page.</p>
-        <button className="back-btn" onClick={() => navigate(-1)}>⬅ Back to Listings</button>
-      </div>
-    </div>
+      <Footer />
+    </>
   );
 }
 

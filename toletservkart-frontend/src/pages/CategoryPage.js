@@ -6,7 +6,10 @@ import '../App.css';
 const CategoryPage = () => {
   const { name } = useParams();
   const [listings, setListings] = useState([]);
+  const [filteredListings, setFilteredListings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOption, setSortOption] = useState('Latest');
 
   const categoryName = name.charAt(0).toUpperCase() + name.slice(1);
 
@@ -16,12 +19,13 @@ const CategoryPage = () => {
         const response = await fetch('http://localhost:5000/api/listings');
         const data = await response.json();
 
-        // Filter listings by category name (case-insensitive)
+        // Filter by category (case-insensitive)
         const filtered = data.filter(item =>
           item.category.toLowerCase() === name.toLowerCase()
         );
 
         setListings(filtered);
+        setFilteredListings(filtered);
       } catch (error) {
         console.error('Error fetching listings:', error);
       } finally {
@@ -31,6 +35,27 @@ const CategoryPage = () => {
 
     fetchListings();
   }, [name]);
+
+  // Handle Search
+  useEffect(() => {
+    const filtered = listings.filter(item =>
+      item.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredListings(filtered);
+  }, [searchTerm, listings]);
+
+  // Handle Sort
+  useEffect(() => {
+    let sorted = [...filteredListings];
+    if (sortOption === 'Price: Low to High') {
+      sorted.sort((a, b) => a.price - b.price);
+    } else if (sortOption === 'Price: High to Low') {
+      sorted.sort((a, b) => b.price - a.price);
+    } else {
+      sorted = [...listings]; // Latest (default)
+    }
+    setFilteredListings(sorted);
+  }, [sortOption]);
 
   return (
     <main className="container category-page">
@@ -42,9 +67,19 @@ const CategoryPage = () => {
       </section>
 
       <div className="filters-container">
-        <input type="text" placeholder="Search listings..." className="search-bar" />
-        <select className="filter-select">
-          <option>Sort by: Latest</option>
+        <input
+          type="text"
+          placeholder="Search listings..."
+          className="search-bar"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <select
+          className="filter-select"
+          value={sortOption}
+          onChange={(e) => setSortOption(e.target.value)}
+        >
+          <option>Latest</option>
           <option>Price: Low to High</option>
           <option>Price: High to Low</option>
         </select>
@@ -54,12 +89,12 @@ const CategoryPage = () => {
         <p>Loading...</p>
       ) : (
         <section className="listings-grid">
-          {listings.length > 0 ? (
-            listings.map(item => (
+          {filteredListings.length > 0 ? (
+            filteredListings.map(item => (
               <Link to={`/listing/${item.id}`} key={item.id} className="listing-card">
                 <div className="listing-image">
                   <img
-                    src={`https://source.unsplash.com/300x180/?${item.image},product`}
+                    src={`http://localhost:5000/${item.image}`}
                     alt={item.title}
                     loading="lazy"
                   />
