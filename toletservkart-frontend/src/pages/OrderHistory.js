@@ -1,16 +1,16 @@
-// src/pages/OrderHistory.js
 import React, { useEffect, useState } from 'react';
 import '../App.css';
 
 function OrderHistory() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const userId = localStorage.getItem('userId'); // Make sure you set this during login
+  const userData = JSON.parse(localStorage.getItem('userData'));
+  const userId = userData?.id;
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/users/${userId}/orders`);
+        const res = await fetch(`http://localhost:5000/api/orders/${userId}`);
         const data = await res.json();
         setOrders(data);
       } catch (error) {
@@ -20,7 +20,9 @@ function OrderHistory() {
       }
     };
 
-    fetchOrders();
+    if (userId) {
+      fetchOrders();
+    }
   }, [userId]);
 
   return (
@@ -36,7 +38,7 @@ function OrderHistory() {
           <thead>
             <tr>
               <th>#</th>
-              <th>Item</th>
+              <th>Product</th>
               <th>Type</th>
               <th>Price</th>
               <th>Date</th>
@@ -44,16 +46,25 @@ function OrderHistory() {
             </tr>
           </thead>
           <tbody>
-            {orders.map((order, index) => (
-              <tr key={order.id}>
-                <td>{index + 1}</td>
-                <td>{order.item}</td>
-                <td>{order.type}</td>
-                <td>{order.price}</td>
-                <td>{new Date(order.date).toLocaleDateString()}</td>
-                <td>{order.status}</td>
-              </tr>
-            ))}
+            {orders.flatMap((order, orderIndex) => {
+              let items = [];
+              try {
+                items = JSON.parse(order.cart_items || '[]');
+              } catch (e) {
+                console.error("Invalid cart_items JSON", e);
+              }
+
+              return items.map((item, i) => (
+                <tr key={`${order.order_id}-${i}`}>
+                  <td>{orderIndex + 1}</td>
+                  <td>{item.title || 'N/A'}</td>
+                  <td>{item.type || 'N/A'}</td>
+                  <td>₹{item.price || 0}</td>
+                  <td>{new Date(order.created_at).toLocaleDateString()}</td>
+                  <td>Confirmed</td>
+                </tr>
+              ));
+            })}
           </tbody>
         </table>
       )}

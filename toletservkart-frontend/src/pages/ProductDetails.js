@@ -57,6 +57,33 @@ function ProductDetails() {
     navigate('/cart');
   };
 
+   const handleAddToWishlist = async () => {
+    const userData = JSON.parse(localStorage.getItem('userData'));
+    if (!userData) return alert("⚠️ Please login to use wishlist");
+
+    try {
+      const res = await axios.post("http://localhost:5000/api/wishlist", {
+        user_id: userData.id,
+      product_id: String(product?.id || product?._id),  // ✅ correct this line
+
+        title: product.title,
+        image: product.image,
+        price: product.price,
+        location: product.location,
+         source: "products"
+      });
+
+      if (res.status === 201) {
+        alert("❤️ Added to wishlist!");
+      } else {
+        alert("❌ Failed to add to wishlist.");
+      }
+    } catch (error) {
+      console.error("Wishlist add error:", error);
+      alert("❌ Something went wrong. Please try again.");
+    }
+  };
+
   if (loading) return <div className="container text-center mt-5">Loading...</div>;
 
   if (!product) {
@@ -97,6 +124,9 @@ function ProductDetails() {
             {/* Buttons */}
             <div className="d-flex flex-wrap gap-3 mb-4">
               <button className="btn btn-warning btn-lg" onClick={handleAddToCart}>🛒 Rent Now</button>
+                  <button className="btn btn-outline-danger btn-lg" onClick={handleAddToWishlist}>
+                ❤️ Add to Wishlist
+              </button>
               <button className="btn btn-outline-primary btn-lg" onClick={handleAddToCart}>➕ Add to Cart</button>
               <button className="btn btn-outline-secondary btn-lg" onClick={() => navigate(-1)}>⬅ Back</button>
             </div>

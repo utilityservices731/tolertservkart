@@ -211,60 +211,104 @@ app.post("/api/admins/login", async (req, res) => {
   }
 });
 
-// ---------- CREATE ORDER ----------
-app.post("/api/orders", async (req, res) => {
-  const { user_id, item, type, price, date, status } = req.body;
+// order 
 
-  if (!user_id || !item || !type || !price || !date || !status) {
-    return res.status(400).json({ message: "All fields are required." });
+app.post("/api/orders", async (req, res) => {
+  const userHeader = req.headers['x-user'];
+  if (!userHeader) return res.status(401).json({ message: "Login required" });
+
+  let user;
+  try {
+    user = JSON.parse(userHeader);
+    if (!user.id) throw new Error("Missing user id");
+  } catch (err) {
+    return res.status(400).json({ message: "Invalid user header" });
+  }
+
+  const { name, email, address, city, zip, paymentMethod, cartItems = [] } = req.body;
+
+  if (!name || !email || !address || !city || !zip || !paymentMethod || !cartItems.length) {
+    return res.status(400).json({ message: "Missing required fields or empty cart" });
   }
 
   try {
     await query(
-      "INSERT INTO orders (user_id, item, type, price, date, status) VALUES (?, ?, ?, ?, ?, ?)",
-      [user_id, item, type, price, date, status]
+      `INSERT INTO orders 
+       (user_id, name, email, address, city, zip, payment_method, cart_items)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        user.id,
+        name,
+        email,
+        address,
+        city,
+        zip,
+        paymentMethod,
+        JSON.stringify(cartItems)
+      ]
     );
 
-    res.status(201).json({ message: "Order saved successfully." });
+    res.status(201).json({ message: "✅ Order placed successfully!" });
   } catch (err) {
-    console.error("Order creation error:", err);
+    console.error("❌ Order insert error:", err);
     res.status(500).json({ message: "Server error." });
   }
 });
 
-// ---------- GET USER ORDER HISTORY ----------
-app.get("/api/orders/:userId", async (req, res) => {
+app.get('/api/orders/:userId', async (req, res) => {
   const { userId } = req.params;
-
   try {
     const orders = await query("SELECT * FROM orders WHERE user_id = ?", [userId]);
     res.status(200).json(orders);
   } catch (err) {
-    console.error("Fetch orders error:", err);
-    res.status(500).json({ message: "Server error." });
+    console.error("❌ Failed to fetch orders:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-// ---------- PLACE ORDER ----------
-app.post("/api/place-order", async (req, res) => {
-  const { name, email, address, city, zip, paymentMethod } = req.body;
+app.post("/api/wishlist", async (req, res) => {
+  const { user_id, product_id, title, image, price, location, source } = req.body;
 
-  if (!name || !email || !address || !city || !zip || !paymentMethod) {
-    return res.status(400).json({ message: "All fields are required." });
+  if (!user_id || !product_id || !title) {
+    return res.status(400).json({ message: "Required fields missing" });
   }
 
   try {
     await query(
-      "INSERT INTO orders (name, email, address, city, zip, payment_method) VALUES (?, ?, ?, ?, ?, ?)",
-      [name, email, address, city, zip, paymentMethod]
+      "INSERT INTO wishlist (user_id, product_id, title, image, price, location, source) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [user_id, product_id, title, image, price, location, source] // ✅ source included here?
     );
-
-    res.status(201).json({ message: "Order placed successfully." });
+    res.status(201).json({ message: "Added to wishlist" });
   } catch (err) {
-    console.error("Order placement error:", err);
-    res.status(500).json({ message: "Server error while placing order." });
+    console.error("Wishlist error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 });
+
+
+app.get("/api/wishlist/:userId", async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const results = await query("SELECT * FROM wishlist WHERE user_id = ?", [userId]);
+    res.status(200).json(results);
+  } catch (err) {
+    console.error("Fetch wishlist error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+app.delete("/api/wishlist/:wishlistId", async (req, res) => {
+  const { wishlistId } = req.params;
+  try {
+    await query("DELETE FROM wishlist WHERE wishlist_id = ?", [wishlistId]);
+    res.status(200).json({ message: "Removed from wishlist" });
+  } catch (err) {
+    console.error("Wishlist delete error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 
 // ---------- GET ALL LISTINGS ----------
 app.get('/api/listings', async (req, res) => {

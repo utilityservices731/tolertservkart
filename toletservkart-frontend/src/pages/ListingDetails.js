@@ -9,7 +9,7 @@ function ListingDetails() {
   const navigate = useNavigate();
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [quantity, setQuantity] = useState(1); // Default rental months
+  const [quantity, setQuantity] = useState(1); // Rental duration
 
   useEffect(() => {
     axios
@@ -24,30 +24,56 @@ function ListingDetails() {
       });
   }, [id]);
 
- const handleAddToCart = () => {
-  const cart = JSON.parse(localStorage.getItem('cart')) || [];
-  const exists = cart.find((item) => item.id === String(listing._id)); // 🔁 fix comparison
+  const handleAddToCart = () => {
+    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+    const exists = cart.find((item) => item.id === String(listing._id));
 
-  if (!exists) {
-    cart.push({
-      id: String(listing._id), // ✅ store as string for safety
-      title: listing.title,
-      image: listing.image,
-      price: listing.price,
-      months: quantity,
-      total: listing.price * quantity,
-    });
-    localStorage.setItem('cart', JSON.stringify(cart));
-    alert(`✔️ Added to cart for ${quantity} month(s)`);
-    navigate('/cart');
-  } else {
-    alert('⚠️ Already in cart');
-  }
-};
+    if (!exists) {
+      cart.push({
+        id: String(listing._id),
+        title: listing.title,
+        image: listing.image,
+        price: listing.price,
+        months: quantity,
+        total: listing.price * quantity,
+      });
+      localStorage.setItem('cart', JSON.stringify(cart));
+      alert(`✔️ Added to cart for ${quantity} month(s)`);
+      navigate('/cart');
+    } else {
+      alert('⚠️ Already in cart');
+    }
+  };
 
+  const handleAddToWishlist = async () => {
+    const userData = JSON.parse(localStorage.getItem('userData'));
+    if (!userData) return alert("⚠️ Please login to use wishlist");
 
-  const increment = () => setQuantity((prev) => prev + 1);
-  const decrement = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+    try {
+      const res = await axios.post("http://localhost:5000/api/wishlist", {
+        user_id: userData.id,
+      product_id: String(listing?.id || listing?._id),  // ✅ correct this line
+
+        title: listing.title,
+        image: listing.image,
+        price: listing.price,
+        location: listing.location,
+         source: "listings"
+      });
+
+      if (res.status === 201) {
+        alert("❤️ Added to wishlist!");
+      } else {
+        alert("❌ Failed to add to wishlist.");
+      }
+    } catch (error) {
+      console.error("Wishlist add error:", error);
+      alert("❌ Something went wrong. Please try again.");
+    }
+  };
+
+  const increment = () => setQuantity(prev => prev + 1);
+  const decrement = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
 
   if (loading) {
     return (
@@ -78,7 +104,7 @@ function ListingDetails() {
       <Header />
       <div className="container py-5">
         <div className="row g-5 align-items-start">
-          {/* 📸 Image */}
+          {/* Image */}
           <div className="col-md-6">
             <img
               src={listing.image || 'https://via.placeholder.com/600x400?text=No+Image'}
@@ -88,7 +114,7 @@ function ListingDetails() {
             />
           </div>
 
-          {/* 📄 Details */}
+          {/* Details */}
           <div className="col-md-6">
             <h2 className="fw-bold mb-3">{listing.title}</h2>
             <p className="fs-4 text-success mb-2">₹{parseInt(listing.price).toLocaleString('en-IN')} / month</p>
@@ -97,7 +123,7 @@ function ListingDetails() {
             <hr />
             <p className="mb-4">{listing.description || 'No description provided by the seller.'}</p>
 
-            {/* 🔢 Quantity Controls */}
+            {/* Rent Duration Controls */}
             <div className="d-flex align-items-center gap-3 mb-4">
               <strong>📅 Rent Duration:</strong>
               <button className="btn btn-outline-dark" onClick={decrement}>−</button>
@@ -105,17 +131,20 @@ function ListingDetails() {
               <button className="btn btn-outline-dark" onClick={increment}>+</button>
             </div>
 
-            {/* 🛒 Buttons */}
+            {/* Action Buttons */}
             <div className="d-flex flex-wrap gap-3 mb-4">
               <button className="btn btn-warning btn-lg" onClick={handleAddToCart}>
                 🛒 Rent Now
+              </button>
+              <button className="btn btn-outline-danger btn-lg" onClick={handleAddToWishlist}>
+                ❤️ Add to Wishlist
               </button>
               <button className="btn btn-outline-secondary btn-lg" onClick={() => navigate(-1)}>
                 ⬅ Back
               </button>
             </div>
 
-            {/* 📞 Contact Seller */}
+            {/* Contact Info */}
             <div className="mt-4">
               <h5 className="fw-bold mb-3">📞 Contact Seller</h5>
               <p><strong>Name:</strong> {listing.sellerName || 'Ranjana Chaursiya'}</p>

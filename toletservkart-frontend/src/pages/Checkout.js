@@ -34,25 +34,29 @@ const handleSubmit = async (e) => {
   setMessage('');
 
   const userData = JSON.parse(localStorage.getItem('userData'));
-  const payload = {
-    ...formData,
-    cartItems,
-  };
+  const { name, email, address, city, zip, paymentMethod } = formData;
 
-  console.log("📦 Sending order to backend:", payload);
-  console.log("👤 With user header:", userData);
-
-  if (!userData) {
+  if (!userData || !userData.id) {
     setMessage("❌ You must be logged in to place an order.");
     setLoading(false);
     return;
   }
 
-  if (cartItems.length === 0) {
+  if (!name || !email || !address || !city || !zip || !paymentMethod) {
+    setMessage("❌ Please fill all form fields.");
+    setLoading(false);
+    return;
+  }
+
+  if (!cartItems || cartItems.length === 0) {
     setMessage("❌ Your cart is empty.");
     setLoading(false);
     return;
   }
+
+  const payload = {
+    name, email, address, city, zip, paymentMethod, cartItems
+  };
 
   try {
     const response = await axios.post(
@@ -61,33 +65,39 @@ const handleSubmit = async (e) => {
       {
         headers: {
           'x-user': JSON.stringify(userData),
-          'Content-Type': 'application/json', // ✅ Add this!
+          'Content-Type': 'application/json',
         },
       }
     );
 
     console.log("✅ Order response:", response.data);
 
-    if (response.status === 201) {
-      setMessage('✅ Order placed successfully!');
-      localStorage.removeItem('cart');
-      setCartItems([]);
-      setFormData({
-        name: '',
-        email: '',
-        address: '',
-        city: '',
-        zip: '',
-        paymentMethod: 'card',
-      });
-    }
+  if (response.status === 201) {
+  setMessage('✅ Order placed successfully!');
+
+  setTimeout(() => {
+    localStorage.removeItem('cart');
+    setCartItems([]);
+  },2000); // 1 सेकंड बाद empty होगा ताकि message दिख सके
+
+  setFormData({
+    name: '',
+    email: '',
+    address: '',
+    city: '',
+    zip: '',
+    paymentMethod: 'card',
+  });
+}
+
   } catch (error) {
     console.error('❌ Order submission error:', error.response?.data || error.message);
-    setMessage('❌ Failed to place order. Please try again.');
+    setMessage(error.response?.data?.message || '❌ Failed to place order. Please try again.');
   } finally {
     setLoading(false);
   }
 };
+
 
 
 
