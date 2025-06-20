@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
-import "../App.css"; // Reuse your sidebar and layout CSS
+import "../App.css";
 
 const OwnerOrderRequests = () => {
   const [orders, setOrders] = useState([]);
@@ -13,30 +13,30 @@ const OwnerOrderRequests = () => {
   const location = useLocation();
 
   useEffect(() => {
+    if (!ownerInfo?.id) return;
+
     axios
-      .get("http://localhost:5000/api/orders/requests", {
+      .get(`http://localhost:5000/api/orders/owner/${ownerInfo.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then((res) => {
-        setOrders(res.data || []);
-      })
+      .then((res) => setOrders(res.data || []))
       .catch((err) => {
         console.error("Order fetch error:", err);
         setOrders([]);
       })
       .finally(() => setLoading(false));
-  }, [token]);
+  }, [token, ownerInfo]);
 
-  const handleAccept = async (id) => {
+  const handleAccept = async (orderId) => {
     try {
       await axios.put(
-        `http://localhost:5000/api/orders/${id}/accept`,
+        `http://localhost:5000/api/orders/${orderId}/accept`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setOrders((prev) =>
         prev.map((order) =>
-          order._id === id ? { ...order, status: "Accepted" } : order
+          order.order_id === orderId ? { ...order, status: "Accepted" } : order
         )
       );
     } catch (err) {
@@ -44,16 +44,16 @@ const OwnerOrderRequests = () => {
     }
   };
 
-  const handleReject = async (id) => {
+  const handleReject = async (orderId) => {
     try {
       await axios.put(
-        `http://localhost:5000/api/orders/${id}/reject`,
+        `http://localhost:5000/api/orders/${orderId}/reject`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setOrders((prev) =>
         prev.map((order) =>
-          order._id === id ? { ...order, status: "Rejected" } : order
+          order.order_id === orderId ? { ...order, status: "Rejected" } : order
         )
       );
     } catch (err) {
@@ -78,33 +78,15 @@ const OwnerOrderRequests = () => {
           <p>{ownerInfo?.email || "owner@example.com"}</p>
         </div>
         <ul className="owner-nav">
-          <li className={isActive("/owner-dashboard") ? "active" : ""} onClick={() => navigate("/owner-dashboard")}>
-            Dashboard
-          </li>
-          <li className={isActive("/upload-product") ? "active" : ""} onClick={() => navigate("/upload-product")}>
-            Upload Product
-          </li>
-          <li className={isActive("/my-products") ? "active" : ""} onClick={() => navigate("/my-products")}>
-            My Products
-          </li>
-          <li className={isActive("/order-requests") ? "active" : ""} onClick={() => navigate("/order-requests")}>
-            Order Requests
-          </li>
-          <li className={isActive("/my-orders") ? "active" : ""} onClick={() => navigate("/my-orders")}>
-            My Orders
-          </li>
-          <li className={isActive("/wallet") ? "active" : ""} onClick={() => navigate("/wallet")}>
-            Wallet
-          </li>
-          <li className={isActive("/profile-settings") ? "active" : ""} onClick={() => navigate("/profile-settings")}>
-            Profile Settings
-          </li>
-          <li className={isActive("/support") ? "active" : ""} onClick={() => navigate("/support")}>
-            Support
-          </li>
-          <li onClick={handleLogout} style={{ cursor: "pointer", color: "red", fontWeight: "bold" }}>
-            Logout
-          </li>
+          <li className={isActive("/owner-dashboard") ? "active" : ""} onClick={() => navigate("/owner-dashboard")}>Dashboard</li>
+          <li className={isActive("/upload-product") ? "active" : ""} onClick={() => navigate("/upload-product")}>Upload Product</li>
+          <li className={isActive("/my-products") ? "active" : ""} onClick={() => navigate("/my-products")}>My Products</li>
+          <li className={isActive("/order-requests") ? "active" : ""} onClick={() => navigate("/order-requests")}>Order Requests</li>
+         
+          {/* <li className={isActive("/wallet") ? "active" : ""} onClick={() => navigate("/wallet")}>Wallet</li> */}
+          <li className={isActive("/profile-settings") ? "active" : ""} onClick={() => navigate("/profile-settings")}>Profile Settings</li>
+          <li className={isActive("/support") ? "active" : ""} onClick={() => navigate("/support")}>Support</li>
+          <li onClick={handleLogout} style={{ cursor: "pointer", color: "red", fontWeight: "bold" }}>Logout</li>
         </ul>
       </aside>
 
@@ -117,38 +99,53 @@ const OwnerOrderRequests = () => {
         ) : orders.length === 0 ? (
           <p className="no-orders">No order requests found.</p>
         ) : (
-          <div className="order-list">
-            {orders.map((order) => (
-              <div className="order-card" key={order._id}>
-                <div className="order-info">
-                  <h3>{order.productTitle}</h3>
-                  <p><strong>Customer:</strong> {order.customerName}</p>
-                  <p><strong>Quantity:</strong> {order.quantity}</p>
-                  <p><strong>Total:</strong> ₹{order.totalAmount}</p>
-                  <p>
-                    <strong>Status:</strong>{" "}
+          <table className="table table-bordered table-striped">
+            <thead className="table-primary">
+              <tr>
+                <th>Product</th>
+                <th>Customer</th>
+                <th>Quantity</th>
+                <th>Total ₹</th>
+                <th>Status</th>
+                <th>Actions</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((order) => (
+                <tr key={order.order_id}>
+                  <td>{order.product_title}</td>
+                  <td>{order.customer_name}</td>
+                  <td>{order.quantity}</td>
+                  <td>₹{order.total_amount}</td>
+                  <td>
                     <span
                       className={
                         order.status === "Accepted"
-                          ? "status-accepted"
+                          ? "badge bg-success"
                           : order.status === "Rejected"
-                          ? "status-rejected"
-                          : "status-pending"
+                          ? "badge bg-danger"
+                          : "badge bg-warning text-dark"
                       }
                     >
                       {order.status}
                     </span>
-                  </p>
-                </div>
-                {order.status === "Pending" && (
-                  <div className="order-actions">
-                    <button className="accept-btn" onClick={() => handleAccept(order._id)}>Accept</button>
-                    <button className="reject-btn" onClick={() => handleReject(order._id)}>Reject</button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+                  </td>
+                  <td>
+                    {order.status === "Pending" ? (
+                      <>
+                        <button className="btn btn-sm btn-success me-2" onClick={() => handleAccept(order.order_id)}>Accept</button>
+                        <button className="btn btn-sm btn-danger" onClick={() => handleReject(order.order_id)}>Reject</button>
+                      </>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                  <td>{new Date(order.created_at).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </main>
     </div>

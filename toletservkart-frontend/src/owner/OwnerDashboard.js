@@ -3,136 +3,79 @@ import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../App.css";
 
-// ✅ Dummy products (outside component)
-const dummyProducts = [
-  {
-    id: 1,
-    title: "Stylish Kurti",
-    price: 499,
-    imageUrl: "https://source.unsplash.com/150x150/?kurti,fashion",
-    description: "Comfortable and elegant kurti suitable for everyday wear.",
-  },
-  {
-    id: 2,
-    title: "Wedding Saree",
-    price: 1199,
-    imageUrl: "https://source.unsplash.com/150x150/?saree,wedding",
-    description: "Perfect for weddings and traditional functions.",
-  },
-  {
-    id: 3,
-    title: "Men’s Blazer",
-    price: 1499,
-    imageUrl: "https://source.unsplash.com/150x150/?blazer,men",
-    description: "Sharp and classy blazer for formal occasions.",
-  },
-  {
-    id: 4,
-    title: "Party Gown",
-    price: 999,
-    imageUrl: "https://source.unsplash.com/150x150/?gown,women",
-    description: "Elegant gown for evening and party wear.",
-  },
-  {
-    id: 5,
-    title: "Ethnic Dress",
-    price: 799,
-    imageUrl: "https://source.unsplash.com/150x150/?ethnic,fashion",
-    description: "Traditional ethnic dress with modern touch.",
-  },
-  {
-    id: 6,
-    title: "Kids Lehenga",
-    price: 599,
-    imageUrl: "https://source.unsplash.com/150x150/?kids,lehenga",
-    description: "Cute lehenga for little girls' festive look.",
-  },
-  {
-    id: 7,
-    title: "Formal Shirt",
-    price: 699,
-    imageUrl: "https://source.unsplash.com/150x150/?shirt,formal",
-    description: "Smart and crisp shirt for office and meetings.",
-  },
-  {
-    id: 8,
-    title: "Silk Saree",
-    price: 1399,
-    imageUrl: "https://source.unsplash.com/150x150/?silk,saree",
-    description: "Graceful silk saree with beautiful weaving.",
-  },
-  {
-    id: 9,
-    title: "Designer Dress",
-    price: 1199,
-    imageUrl: "https://source.unsplash.com/150x150/?designer,dress",
-    description: "Trendy designer dress for modern women.",
-  },
-  {
-    id: 10,
-    title: "Wedding Sherwani",
-    price: 1999,
-    imageUrl: "https://source.unsplash.com/150x150/?sherwani,wedding",
-    description: "Premium sherwani perfect for groom and ceremonies.",
-  },
-  {
-    id: 11,
-    title: "Lehenga Choli",
-    price: 1699,
-    imageUrl: "https://source.unsplash.com/150x150/?lehenga,choli",
-    description: "Gorgeous lehenga choli for bridal and festive looks.",
-  },
-  {
-    id: 12,
-    title: "Casual T-shirt",
-    price: 299,
-    imageUrl: "https://source.unsplash.com/150x150/?casual,tshirt",
-    description: "Comfortable cotton t-shirt for everyday wear.",
-  },
-];
-
 const OwnerDashboard = () => {
   const [products, setProducts] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [editedProduct, setEditedProduct] = useState({});
   const [loading, setLoading] = useState(true);
+  const [ownerInfo, setOwnerInfo] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const token = localStorage.getItem("token");
-  const ownerInfo = JSON.parse(localStorage.getItem("ownerInfo"));
+  useEffect(() => {
+    const storedInfo = JSON.parse(localStorage.getItem("ownerInfo"));
+    setOwnerInfo(storedInfo);
+  }, []);
 
   useEffect(() => {
-    if (!token) {
-      setProducts([]);
-      setLoading(false);
-      return;
-    }
+    if (!ownerInfo?.id) return;
 
     axios
-      .get("http://localhost:5000/api/products/my", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        const data = res.data;
-        if (Array.isArray(data) && data.length > 0) {
-          setProducts(data);
-        } else {
-          setProducts([]);
-        }
-      })
+      .get(`http://localhost:5000/api/products/owner/${ownerInfo.id}`)
+      .then((res) => setProducts(res.data || []))
       .catch((err) => {
-        console.error("API Error:", err);
+        console.error("❌ Error fetching products:", err);
         setProducts([]);
       })
       .finally(() => setLoading(false));
-  }, [token]);
+  }, [ownerInfo]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
     localStorage.removeItem("ownerInfo");
     navigate("/owner-login");
   };
 
   const isActive = (path) => location.pathname === path;
+
+  const handleEditClick = (product) => {
+    setEditingId(product.id);
+    setEditedProduct({ ...product });
+  };
+
+  const handleCancel = () => {
+    setEditingId(null);
+    setEditedProduct({});
+  };
+
+  const handleInputChange = (e, field) => {
+    setEditedProduct((prev) => ({
+      ...prev,
+      [field]: e.target.value,
+    }));
+  };
+
+  const handleSave = async () => {
+    try {
+      await axios.put(`http://localhost:5000/api/products/${editingId}`, editedProduct);
+      setProducts((prev) =>
+        prev.map((p) => (p.id === editingId ? editedProduct : p))
+      );
+      setEditingId(null);
+      setEditedProduct({});
+    } catch (err) {
+      console.error("❌ Failed to update:", err);
+      alert("Failed to save changes.");
+    }
+  };
+
+  const handleDelete = (id) => {
+    if (window.confirm("Delete this product?")) {
+      axios
+        .delete(`http://localhost:5000/api/products/${id}`)
+        .then(() => setProducts((prev) => prev.filter((p) => p.id !== id)))
+        .catch((err) => alert("Failed to delete product."));
+    }
+  };
 
   return (
     <div className="owner-dashboard-layout">
@@ -143,116 +86,158 @@ const OwnerDashboard = () => {
           <p>{ownerInfo?.email || "owner@example.com"}</p>
         </div>
         <ul className="owner-nav">
-          <li
-            className={isActive("/owner-dashboard") ? "active" : ""}
-            onClick={() => navigate("/owner-dashboard")}
-          >
-            Dashboard
-          </li>
-          <li
-            className={isActive("/upload-product") ? "active" : ""}
-            onClick={() => navigate("/upload-product")}
-          >
-            Upload Product
-          </li>
-          <li
-            className={isActive("/my-products") ? "active" : ""}
-            onClick={() => navigate("/my-products")}
-          >
-            My Products
-          </li>
-          <li
-            className={isActive("/order-requests") ? "active" : ""}
-            onClick={() => navigate("/order-requests")}
-          >
-            Order Requests
-          </li>
-          <li
-            className={isActive("/my-orders") ? "active" : ""}
-            onClick={() => navigate("/my-orders")}
-          >
-            My Orders
-          </li>
-          <li
-            className={isActive("/wallet") ? "active" : ""}
-            onClick={() => navigate("/wallet")}
-          >
-            Wallet
-          </li>
-          <li
-            className={isActive("/profile-settings") ? "active" : ""}
-            onClick={() => navigate("/profile-settings")}
-          >
-            Profile Settings
-          </li>
-          <li
-            className={isActive("/support") ? "active" : ""}
-            onClick={() => navigate("/support")}
-          >
-            Support
-          </li>
-          <li
-            onClick={handleLogout}
-            style={{ cursor: "pointer", color: "red", fontWeight: "bold" }}
-          >
-            Logout
-          </li>
+                   <li className={isActive("/owner-dashboard") ? "active" : ""} onClick={() => navigate("/owner-dashboard")}>Dashboard</li>
+          <li className={isActive("/upload-product") ? "active" : ""} onClick={() => navigate("/upload-product")}>Upload Product</li>
+          <li className={isActive("/my-products") ? "active" : ""} onClick={() => navigate("/my-products")}>My Products</li>
+          <li className={isActive("/order-requests") ? "active" : ""} onClick={() => navigate("/order-requests")}>Order Requests</li>
+
+          {/* <li className={isActive("/wallet") ? "active" : ""} onClick={() => navigate("/wallet")}>Wallet</li> */}
+          <li className={isActive("/profile-settings") ? "active" : ""} onClick={() => navigate("/profile-settings")}>Profile Settings</li>
+          <li className={isActive("/support") ? "active" : ""} onClick={() => navigate("/support")}>Support</li>
+          <li onClick={handleLogout} style={{ cursor: "pointer", color: "red", fontWeight: "bold" }}>Logout</li>
+
         </ul>
       </aside>
 
       {/* Main Content */}
-      <main className="owner-main-content">
-        <h2 className="section-title">Your Uploaded Products</h2>
-        <p className="dashboard-subtext">
-          Here are the items you've listed for rent or sale.
-        </p>
+    <main className="owner-main-content">
+  <h2 className="section-title">
+    Welcome, <span style={{ color: "#007bff" }}>{ownerInfo?.name || "Owner"}</span>! 👋
+  </h2>
+  <p className="dashboard-subtext" style={{ marginBottom: "20px" }}>
+    Here's a list of all your uploaded items. You can edit or remove them anytime!
+  </p>
 
-        {loading ? (
-          <p>Loading...</p>
-        ) : products.length === 0 ? (
-          <>
-            <p className="no-products">No products uploaded yet.</p>
-            <p className="no-products-subtext">Showing demo items:</p>
-            <ul className="product-list">
-              {dummyProducts.map((product) => (
-                <li key={product.id} className="product-item">
-                  <img
-                    src={product.imageUrl}
-                    alt={product.title}
-                    className="product-img"
-                  />
-                  <div className="product-details">
-                    <h3>{product.title}</h3>
-                    <p className="product-description">{product.description}</p>
-                    <p className="product-price">₹{product.price}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </>
-        ) : (
-          <ul className="product-list">
-            {products.map((product, index) => (
-              <li key={product.id || index} className="product-item">
-                <img
-                  src={product.imageUrl || "https://via.placeholder.com/150"}
-                  alt={product.title}
-                  className="product-img"
-                />
-                <div className="product-details">
-                  <h3>{product.title}</h3>
-                  <p className="product-description">{product.description}</p>
-                  <p className="product-price">₹{product.price}</p>
-                  <div className="product-buttons">
-                    <button className="view-details-btn">View Details</button>
-                    <button className="add-to-cart-btn">Add to Cart</button>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </main>
+  {loading ? (
+    <p>⏳ Loading your product list...</p>
+  ) : products.length === 0 ? (
+    <div className="no-products">
+      <p style={{ fontSize: "16px", marginTop: "20px", color: "#888" }}>
+        You haven’t uploaded any products yet.
+      </p>
+      <button
+        className="upload-btn"
+        style={{
+          marginTop: "10px",
+          padding: "10px 20px",
+          backgroundColor: "#28a745",
+          color: "#fff",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+        }}
+        onClick={() => navigate("/upload-product")}
+      >
+        + Upload First Product
+      </button>
+    </div>
+  ) : (
+    <table className="product-table">
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>Title</th>
+          <th>Price</th>
+          <th>Rent Price</th>
+          <th>Category</th>
+          <th>Location</th>
+          <th>Condition</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {products.map((p) => (
+          <tr key={p.id}>
+            <td>
+              <img
+                src={p.image}
+                alt="img"
+                width={70}
+                style={{ borderRadius: "5px" }}
+              />
+            </td>
+            <td>
+              {editingId === p.id ? (
+                <input value={editedProduct.title} onChange={(e) => handleInputChange(e, "title")} />
+              ) : (
+                <strong>{p.title}</strong>
+              )}
+            </td>
+            <td>
+              {editingId === p.id ? (
+                <input value={editedProduct.price} onChange={(e) => handleInputChange(e, "price")} />
+              ) : (
+                `₹${p.price}`
+              )}
+            </td>
+            <td>
+              {editingId === p.id ? (
+                <input value={editedProduct.rent_price} onChange={(e) => handleInputChange(e, "rent_price")} />
+              ) : (
+                p.rent_price ? `₹${p.rent_price}` : "-"
+              )}
+            </td>
+            <td>
+              {editingId === p.id ? (
+                <input value={editedProduct.category} onChange={(e) => handleInputChange(e, "category")} />
+              ) : (
+                p.category
+              )}
+            </td>
+            <td>
+              {editingId === p.id ? (
+                <input value={editedProduct.location} onChange={(e) => handleInputChange(e, "location")} />
+              ) : (
+                p.location
+              )}
+            </td>
+            <td>
+              {editingId === p.id ? (
+                <input value={editedProduct.condition} onChange={(e) => handleInputChange(e, "condition")} />
+              ) : (
+                p.condition
+              )}
+            </td>
+            <td>
+              {editingId === p.id ? (
+                <>
+                  <button
+                    onClick={handleSave}
+                    style={{ color: "#28a745", fontWeight: "bold" }}
+                  >
+                    💾 Save
+                  </button>{" "}
+                  <button
+                    onClick={handleCancel}
+                    style={{ color: "#dc3545", fontWeight: "bold" }}
+                  >
+                    ❌ Cancel
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => handleEditClick(p)}
+                    style={{ color: "#007bff", fontWeight: "bold" }}
+                  >
+                    ✏️ Edit
+                  </button>{" "}
+                  <button
+                    onClick={() => handleDelete(p.id)}
+                    style={{ color: "red", fontWeight: "bold" }}
+                  >
+                    🗑️ Delete
+                  </button>
+                </>
+              )}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )}
+</main>
+
     </div>
   );
 };

@@ -1,25 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../App.css";
 
-
 const OwnerSupport = () => {
-  const [subject, setSubject] = useState("");
-  const [message, setMessage] = useState("");
-  const [status, setStatus] = useState("");
-
   const navigate = useNavigate();
   const location = useLocation();
   const storedInfo = JSON.parse(localStorage.getItem("ownerInfo"));
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Support submitted:", { subject, message });
-
-    setStatus("✅ Your support request has been sent successfully!");
-    setSubject("");
-    setMessage("");
-  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -50,12 +36,9 @@ const OwnerSupport = () => {
           <li className={isActive("/order-requests") ? "active" : ""} onClick={() => navigate("/order-requests")}>
             Order Requests
           </li>
-          <li className={isActive("/my-orders") ? "active" : ""} onClick={() => navigate("/my-orders")}>
-            My Orders
-          </li>
-          <li className={isActive("/wallet") ? "active" : ""} onClick={() => navigate("/wallet")}>
+          {/* <li className={isActive("/wallet") ? "active" : ""} onClick={() => navigate("/wallet")}>
             Wallet
-          </li>
+          </li> */}
           <li className={isActive("/profile-settings") ? "active" : ""} onClick={() => navigate("/profile-settings")}>
             Profile Settings
           </li>
@@ -69,55 +52,51 @@ const OwnerSupport = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="owner-main-content">
-        <div className="support-page">
-          <div className="support-container">
-            <h2 className="section-title">🛠️ Need Help? Contact Support</h2>
-            <p className="dashboard-subtext">
-              Facing issues with product upload, orders, or payments? Fill the form below. Our support team will respond within 24 hours.
-            </p>
+  <main className="container d-flex justify-content-center py-5">
+  <div className="card shadow p-4 w-100" style={{ maxWidth: "800px" }}>
+    <h3 className="text-center text-primary mb-3">📞 Contact Support</h3>
+    <p className="text-center text-muted mb-4">
+      Need help with your account, orders, or product listings? Reach out to us using the details below.
+    </p>
 
-            <form className="support-form" onSubmit={handleSubmit}>
-              <label htmlFor="subject">Subject</label>
-              <input
-                type="text"
-                id="subject"
-                required
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder="Enter subject..."
-              />
+    {/* Contact Details */}
+    <ul className="list-group list-group-flush mb-4">
+      <li className="list-group-item">
+        <strong>📧 Email:</strong> support@toletservkart.com
+      </li>
+      <li className="list-group-item">
+        <strong>📱 WhatsApp:</strong> +91 98765 43210
+      </li>
+      <li className="list-group-item">
+        <strong>🕒 Support Hours:</strong> Mon - Sat (10 AM - 6 PM)
+      </li>
+      <li className="list-group-item">
+        <strong>📍 Address:</strong> ToletServKart, Block B, Sector 12, Noida, UP
+      </li>
+    </ul>
 
-              <label htmlFor="message">Message</label>
-              <textarea
-                id="message"
-                required
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Describe your issue..."
-                rows={5}
-              ></textarea>
+    {/* Support Note */}
+    <div className="alert alert-info text-center" role="alert">
+      We usually respond within 24 hours. For urgent issues, contact via WhatsApp.
+    </div>
 
-              <button type="submit" className="send-support-btn">
-                📩 Send Message
-              </button>
+    {/* FAQ Section */}
+    <div className="mt-4">
+      <h4 className="text-secondary mb-3">💬 Frequently Asked Questions</h4>
+      <ul className="list-unstyled">
+        <li className="mb-2">👉 How can I withdraw my wallet balance?</li>
+        <li className="mb-2">👉 How do I track my order or return status?</li>
+        <li className="mb-2">👉 Can I list both rental and sale items?</li>
+        <li className="mb-2">👉 Why was my product rejected during approval?</li>
+      </ul>
+      <p className="text-muted small text-center mt-3">
+        Still confused? Our support team is just a message away!
+      </p>
+    </div>
+  </div>
+</main>
 
-              {status && <p className="support-success-msg">{status}</p>}
-            </form>
-          </div>
 
-          <div className="faq-section">
-            <h3>💬 Frequently Asked Questions</h3>
-            <ul>
-              <li>How can I withdraw my wallet balance?</li>
-              <li>How do I track my order or return status?</li>
-              <li>Can I list both rental and sale items?</li>
-              <li>Why was my product rejected during approval?</li>
-            </ul>
-            <p className="note">Still confused? Our support team is just a message away!</p>
-          </div>
-        </div>
-      </main>
     </div>
   );
 };

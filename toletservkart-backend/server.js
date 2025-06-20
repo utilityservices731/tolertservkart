@@ -1,6 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql");
+const multer = require("multer"); 
+const path = require("path");
+
 const util = require("util");
 const jwt = require("jsonwebtoken");
 require('dotenv').config();
@@ -21,6 +24,16 @@ const db = mysql.createPool({
 
 // ✅ Fixed this line:
 const query = util.promisify(db.query).bind(db);
+
+// ✅ Multer Setup for File Upload
+const storage = multer.diskStorage({
+  destination: "uploads/",
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `product-${Date.now()}${ext}`);
+  },
+});
+const upload = multer({ storage }); // ✅ This was missing in your code
 
 // ---------- USERS REGISTER ----------
 app.post("/api/auth/register", async (req, res) => {
@@ -562,6 +575,271 @@ console.log("🛠 cartItems.length:", cartItems.length);
     res.status(201).json({ message: '✅ Order placed successfully!', orderId: result.insertId });
   });
 });
+
+app.get("/api/products/owner/:ownerId", async (req, res) => {
+  const { ownerId } = req.params;
+
+  try {
+  
+    const rows = await query(
+      "SELECT * FROM products WHERE owner_id = ?",
+      [ownerId]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ Error fetching products for owner:", err);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+});
+
+app.delete("/api/products/:productId", async (req, res) => {
+  const { productId } = req.params;
+  try {
+    const result = await query("DELETE FROM products WHERE id = ?", [productId]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("❌ Error deleting product:", err);
+    res.status(500).json({ error: "Failed to delete product" });
+  }
+});
+
+app.put("/api/products/:id", async (req, res) => {
+  const { id } = req.params;
+  const {
+    title,
+    description,
+    price,
+    rent_price,
+    category,
+    image,
+    condition,
+    location,
+    available,
+    is_rentable,
+    verified,
+  } = req.body;
+
+  try {
+    const [result] = await query(
+      `UPDATE products SET 
+        title = ?, 
+        description = ?, 
+        price = ?, 
+        rent_price = ?, 
+        category = ?, 
+        image = ?, 
+        condition = ?, 
+        location = ?, 
+        available = ?, 
+        is_rentable = ?, 
+        verified = ? 
+      WHERE id = ?`,
+      [
+        title,
+        description,
+        price,
+        rent_price,
+        category,
+        image,
+        condition,
+        location,
+        available,
+        is_rentable,
+        verified,
+        id,
+      ]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    res.json({ message: "Product updated successfully" });
+  } catch (err) {
+    console.error("❌ Error updating product:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ✅ POST /api/products — Upload Product
+
+app.post("/api/products", upload.single("image"), async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+      if (err) {
+        return res.status(403).json({ message: "Invalid token" });
+      }
+
+      const ownerId = decoded.id;
+      const {
+        title,
+        price,
+        description,
+        rent_price,
+        category,
+        condition,
+        type,
+        location,
+      } = req.body;
+
+      const imagePath = req.file ? req.file.path : null;
+
+      const sql = `
+        INSERT INTO products 
+        (title, description, price, rent_price, image, category, \`condition\`, location, available, is_rentable, owner_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+
+      await query(sql, [
+        title,
+        description,
+        price,
+        rent_price || null,
+        imagePath,
+        category,
+        condition,
+        location || null,
+        1, // available by default
+        type === "rent" ? 1 : 0,
+        ownerId,
+      ]);
+
+      res.status(201).json({ message: "Product uploaded successfully" });
+    });
+  } catch (error) {
+    console.error("Upload error:", error);
+    res.status(500).json({ message: "Server error during upload" });
+  }
+});
+
+
+
+
+// ✅ PUT /api/products/:id — Update Product
+app.put("/api/products/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, price, rent_price, category, location, condition } = req.body;
+
+    await query(
+      `UPDATE products SET title=?, price=?, rent_price=?, category=?, location=?, condition=? WHERE id=?`,
+      [title, price, rent_price, category, location, condition, id]
+    );
+
+    res.json({ message: "Product updated successfully" });
+  } catch (err) {
+    console.error("Update error:", err);
+    res.status(500).json({ error: "Failed to update product" });
+  }
+});
+
+
+// ✅ Get Orders of Specific Owner
+app.get("/api/orders/owner/:ownerId", async (req, res) => {
+  const ownerId = Number(req.params.ownerId);
+  if (!ownerId) return res.status(400).json({ error: "Invalid owner ID" });
+
+  try {
+    const allOrders = await query("SELECT * FROM orders");
+    const ownerOrderItems = [];
+
+    for (let order of allOrders) {
+      const cartItems = JSON.parse(order.cart_items || "[]");
+
+      for (let item of cartItems) {
+        // ✅ Only for products table
+        if (item.source === "products") {
+          const productResult = await query(
+            "SELECT id, title, owner_id FROM products WHERE id = ?",
+            [item.product_id]
+          );
+
+          const product = productResult?.[0];
+          if (product && product.owner_id === ownerId) {
+            ownerOrderItems.push({
+              order_id: order.order_id,
+              product_id: product.id,
+              product_title: product.title,
+              customer_name: order.name,
+              customer_email: order.email,
+              quantity: item.quantity || 1, // default quantity = 1
+              total_amount: (item.quantity || 1) * parseFloat(item.price || 0),
+
+              status: item.status || "Pending",
+              created_at: order.created_at,
+            });
+          }
+        }
+      }
+    }
+
+    res.json(ownerOrderItems);
+  } catch (err) {
+    console.error("❌ Owner order fetch error:", err);
+    res.status(500).json({ error: "Failed to fetch owner orders" });
+  }
+});
+
+// 🔐 Middleware for token verification
+const authenticateOwner = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ message: "Token missing" });
+
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.owner = decoded;
+    next();
+  } catch (err) {
+    return res.status(403).json({ message: "Invalid token" });
+  }
+};
+
+// 🔧 PUT /api/owner/profile
+
+// PUT /api/owner/profile
+app.put("/api/owner/profile", authenticateOwner, async (req, res) => {
+  const ownerId = req.owner.id; // `authenticateOwner` middleware से आया
+  const { name, email, password } = req.body;
+
+  try {
+    let updateFields = "name = ?, email = ?";
+    let values = [name, email];
+
+    if (password && password.trim() !== "") {
+      updateFields += ", password = ?";
+      values.push(password); // plain-text password
+    }
+
+    values.push(ownerId); // WHERE id = ?
+
+    const result = await query(
+      `UPDATE owners SET ${updateFields} WHERE id = ?`,
+      values
+    );
+
+    // Updated owner info return करो (excluding password)
+    const [updated] = await query(
+      "SELECT id, name, email FROM owners WHERE id = ?",
+      [ownerId]
+    );
+
+    res.json(updated);
+  } catch (err) {
+    console.error("❌ Owner update error:", err);
+    res.status(500).json({ message: "Failed to update profile" });
+  }
+});
+
+
 
 
 // ---------- START SERVER ----------

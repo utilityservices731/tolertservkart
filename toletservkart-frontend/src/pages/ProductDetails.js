@@ -41,10 +41,12 @@ function ProductDetails() {
     const cart = JSON.parse(localStorage.getItem('cart')) || [];
     const itemToAdd = {
       id: product._id,
+        product_id: String(product?.id || product?._id),
       title: product.title,
       price: product.price,
       image: product.image,
       location: product.location,
+       source: "products"
     };
     const exists = cart.find((item) => item.id === itemToAdd.id);
     if (!exists) {

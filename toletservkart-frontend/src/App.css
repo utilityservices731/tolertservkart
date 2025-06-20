@@ -1158,6 +1158,42 @@ body {
     font-size: 1.6rem;
   }
 }
+.product-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.product-table th,
+.product-table td {
+  padding: 10px;
+  text-align: center;
+}
+
+.product-table th {
+  background-color: #f0f0f0;
+}
+
+.product-table tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.upload-btn:hover {
+  background-color: #218838;
+}
+.profile-settings-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 30px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+
+.product-table img {
+  border-radius: 6px;
+}
 
 
 /* UploadListing Page */

@@ -70,12 +70,10 @@ const OwnerProfileSettings = () => {
           <li className={isActive("/order-requests") ? "active" : ""} onClick={() => navigate("/order-requests")}>
             Order Requests
           </li>
-          <li className={isActive("/my-orders") ? "active" : ""} onClick={() => navigate("/my-orders")}>
-            My Orders
-          </li>
-          <li className={isActive("/wallet") ? "active" : ""} onClick={() => navigate("/wallet")}>
+        
+          {/* <li className={isActive("/wallet") ? "active" : ""} onClick={() => navigate("/wallet")}>
             Wallet
-          </li>
+          </li> */}
           <li className={isActive("/profile-settings") ? "active" : ""} onClick={() => navigate("/profile-settings")}>
             Profile Settings
           </li>
@@ -92,42 +90,60 @@ const OwnerProfileSettings = () => {
       <main className="owner-main-content">
         <div className="profile-settings-container">
           <h2 className="section-title">👤 Edit Profile</h2>
-          <form onSubmit={handleUpdate} className="profile-form">
-            <label htmlFor="name">Full Name</label>
-            <input
-              type="text"
-              id="name"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
-            />
+        <form onSubmit={handleUpdate} className="profile-form">
+  <div className="mb-3">
+    <label htmlFor="name" className="form-label fw-bold">Full Name</label>
+    <input
+      type="text"
+      id="name"
+      className="form-control"
+      required
+      value={name}
+      onChange={(e) => setName(e.target.value)}
+      placeholder="Enter your name"
+    />
+  </div>
 
-            <label htmlFor="email">Email Address</label>
-            <input
-              type="email"
-              id="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-            />
+  <div className="mb-3">
+    <label htmlFor="email" className="form-label fw-bold">Email Address</label>
+    <input
+      type="email"
+      id="email"
+      className="form-control"
+      required
+      value={email}
+      onChange={(e) => setEmail(e.target.value)}
+      placeholder="Enter your email"
+    />
+  </div>
 
-            <label htmlFor="password">New Password</label>
-            <input
-              type="password"
-              id="password"
-              placeholder="Leave blank to keep same"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
+  <div className="mb-3">
+    <label htmlFor="password" className="form-label fw-bold">New Password</label>
+    <input
+      type="password"
+      id="password"
+      className="form-control"
+      placeholder="Leave blank to keep the same"
+      value={password}
+      onChange={(e) => setPassword(e.target.value)}
+    />
+  </div>
 
-            <button type="submit" className="save-profile-btn" disabled={loading}>
-              {loading ? "Saving..." : "💾 Save Changes"}
-            </button>
+  <button type="submit" className="btn btn-success w-100 mb-3" disabled={loading}>
+    {loading ? "Saving..." : "💾 Save Changes"}
+  </button>
 
-            {message && <p className="profile-message">{message}</p>}
-          </form>
+  {message && (
+    <div
+      className={`alert ${
+        message.includes("✅") ? "alert-success" : "alert-danger"
+      }`}
+    >
+      {message}
+    </div>
+  )}
+</form>
+
         </div>
       </main>
     </div>

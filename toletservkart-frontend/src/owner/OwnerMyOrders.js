@@ -61,9 +61,9 @@ const OwnerMyOrders = () => {
           <li className={isActive("/my-orders") ? "active" : ""} onClick={() => navigate("/my-orders")}>
             My Orders
           </li>
-          <li className={isActive("/wallet") ? "active" : ""} onClick={() => navigate("/wallet")}>
+          {/* <li className={isActive("/wallet") ? "active" : ""} onClick={() => navigate("/wallet")}>
             Wallet
-          </li>
+          </li> */}
           <li className={isActive("/profile-settings") ? "active" : ""} onClick={() => navigate("/profile-settings")}>
             Profile Settings
           </li>
