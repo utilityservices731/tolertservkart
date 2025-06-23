@@ -1,86 +1,123 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import '../App.css';
+import { useNavigate, Link } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function AdminRegister() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
+
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
+    const { name, email, password, confirmPassword } = formData;
+
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await axios.post("http://localhost:5000/api/admins/register", {
+      const res = await axios.post('http://localhost:5000/api/admins/register', {
         name,
         email,
         password,
       });
 
-      alert(response.data.message || "Admin registered successfully");
-      setName('');
-      setEmail('');
-      setPassword('');
+      alert(res.data.message || "Registration successful!");
+      navigate('/admin-login');
     } catch (error) {
-      console.error(error);
       alert(error.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
-    <div className="admin-register-page">
-      <div className="admin-info-box">
-        <h1>Welcome to Admin Panel</h1>
-        <p>Register as an admin to manage users, products, and orders from a central dashboard. Ensure all fields are correctly filled.</p>
-      </div>
+    <div className="container-fluid  bg-gradient vh-100 d-flex justify-content-center align-items-center">
+      <div className="card shadow p-4" style={{ maxWidth: "500px", width: "100%", borderTop: "5px solid red" }}>
+        <h3 className="text-center text-danger mb-3">Admin Register</h3>
+        <p className="text-center text-muted mb-4">Create your admin account</p>
 
-      <div className="admin-register-form">
-        <h2 className="register-title">Admin Registration</h2>
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="name">Full Name</label>
-            <input 
-              id="name"
+          <div className="mb-3">
+            <label className="form-label">Full Name</label>
+            <input
               type="text"
-              placeholder="Enter your full name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required 
+              name="name"
+              className="form-control"
+              placeholder="John Doe"
+              onChange={handleChange}
+              value={formData.name}
+              required
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="email">Email Address</label>
-            <input 
-              id="email"
+          <div className="mb-3">
+            <label className="form-label">Email Address</label>
+            <input
               type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required 
+              name="email"
+              className="form-control"
+              placeholder="admin@example.com"
+              onChange={handleChange}
+              value={formData.email}
+              required
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input 
-              id="password"
+          <div className="mb-3">
+            <label className="form-label">Password</label>
+            <input
               type="password"
-              placeholder="Enter a strong password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required 
+              name="password"
+              className="form-control"
+              placeholder="********"
+              onChange={handleChange}
+              value={formData.password}
+              required
             />
           </div>
 
-          <button type="submit" className="register-button" disabled={loading}>
-            {loading ? "Registering..." : "Register"}
-          </button>
+          <div className="mb-3">
+            <label className="form-label">Confirm Password</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              className="form-control"
+              placeholder="********"
+              onChange={handleChange}
+              value={formData.confirmPassword}
+              required
+            />
+          </div>
+
+          <div className="d-grid mb-3">
+            <button className="btn btn-danger" type="submit" disabled={loading}>
+              {loading ? 'Registering...' : 'Register'}
+            </button>
+          </div>
         </form>
+
+        <p className="text-center text-muted small mt-3">
+          Already have an account?{' '}
+          <Link to="/admin-login" className="text-decoration-none text-danger fw-bold">
+            Login Here
+          </Link>
+        </p>
       </div>
     </div>
   );

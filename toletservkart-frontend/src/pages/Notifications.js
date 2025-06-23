@@ -1,5 +1,7 @@
 // src/pages/Notifications.js
 import React from 'react';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 import '../App.css';
 
 const notifications = [
@@ -11,17 +13,23 @@ const notifications = [
 
 function Notifications() {
   return (
-    <div className="notifications-container">
-      <h2 className="notifications-title">Notifications</h2>
-      <ul className="notifications-list">
-        {notifications.map((n) => (
-          <li key={n.id} className={`notification-item ${n.type}`}>
-            <p className="notification-message">{n.message}</p>
-            <span className="notification-time">{n.time}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <>
+      <Header />
+
+      <div className="notifications-container">
+        <h2 className="notifications-title">Notifications</h2>
+        <ul className="notifications-list">
+          {notifications.map((n) => (
+            <li key={n.id} className={`notification-item ${n.type}`}>
+              <p className="notification-message">{n.message}</p>
+              <span className="notification-time">{n.time}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <Footer />
+    </>
   );
 }
 

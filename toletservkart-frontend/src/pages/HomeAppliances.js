@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../App.css";
 
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+
 const defaultAppliances = [
   {
     id: 1,
@@ -59,22 +62,29 @@ const HomeAppliances = () => {
   };
 
   return (
-    <div className="dresses-page">
-      <h2 className="dresses-heading">Home Appliances for Rent or Sale</h2>
-      <p className="dresses-subtext">Choose from top appliances to make your daily life easier.</p>
-      <div className="product-grid">
-        {appliances.map((item) => (
-          <div className="product-card" key={item.id}>
-            <img src={item.image} alt={item.name} className="product-image" />
-            <div className="product-title">{item.name}</div>
-            <div className="product-price">{item.price}</div>
-            <button className="product-btn" onClick={() => handleAddToCart(item)}>
-              🛒 Rent Now
-            </button>
-          </div>
-        ))}
+    <>
+      <Header />
+
+      <div className="dresses-page">
+        <h2 className="dresses-heading">Home Appliances for Rent or Sale</h2>
+        <p className="dresses-subtext">Choose from top appliances to make your daily life easier.</p>
+
+        <div className="product-grid">
+          {appliances.map((item) => (
+            <div className="product-card" key={item.id}>
+              <img src={item.image} alt={item.name} className="product-image" />
+              <div className="product-title">{item.name}</div>
+              <div className="product-price">{item.price}</div>
+              <button className="product-btn" onClick={() => handleAddToCart(item)}>
+                🛒 Rent Now
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+
+      <Footer />
+    </>
   );
 };
 

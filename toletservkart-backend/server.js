@@ -224,6 +224,418 @@ app.post("/api/admins/login", async (req, res) => {
   }
 });
 
+// .................. ADMINS SUMMARY ..................
+
+// Admin Summary Endpoint using app.get
+app.get("/api/admins/summary", async (req, res) => {
+  try {
+    const users = await query('SELECT COUNT(*) AS total FROM users');
+    const owners = await query('SELECT COUNT(*) AS total FROM owners');
+    const products = await query('SELECT COUNT(*) AS total FROM products');
+    const listings = await query('SELECT COUNT(*) AS total FROM listings');
+    const messages = await query('SELECT COUNT(*) AS total FROM messages');
+    const unreadMessages = await query('SELECT COUNT(*) AS total FROM messages WHERE is_read = 0');
+    const orders = await query('SELECT COUNT(*) AS total FROM orders');
+    const pendingOrders = await query("SELECT COUNT(*) AS total FROM orders WHERE status = 'pending'");
+
+    res.json({
+      totalUsers: users[0].total,
+      totalOwners: owners[0].total,
+      totalProducts: products[0].total,
+      totalListings: listings[0].total,
+      totalMessages: messages[0].total,
+      unreadMessages: unreadMessages[0].total,
+      totalOrders: orders[0].total,
+      pendingOrders: pendingOrders[0]?.total || 0,
+    });
+  } catch (err) {
+    console.error('Summary Error:', err);
+    res.status(500).json({ message: 'Failed to fetch summary' });
+  }
+});
+
+app.get("/api/admin/users", async (req, res) => {
+  try {
+    const users = await query("SELECT id, name, email, role, created_at FROM users");
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch users" });
+  }
+});
+
+
+app.delete("/api/admin/users/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await query("DELETE FROM users WHERE id = ?", [id]);
+    res.json({ message: "User deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to delete user" });
+  }
+});
+
+app.put("/api/admin/users/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, role } = req.body;
+    await query("UPDATE users SET name = ?, email = ?, role = ? WHERE id = ?", [name, email, role, id]);
+    res.json({ message: "User updated successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to update user" });
+  }
+});
+
+app.get("/api/admin/owners", async (req, res) => {
+  try {
+    const owners = await query(`
+      SELECT id, name, email, status, verified, created_at 
+      FROM owners
+    `);
+    res.json(owners);
+  } catch (err) {
+    console.error("Error fetching owners:", err);
+    res.status(500).json({ message: "Failed to fetch owners" });
+  }
+});
+
+app.delete("/api/admin/owners/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await query("DELETE FROM owners WHERE id = ?", [id]);
+    res.json({ message: "Owner deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting owner:", err);
+    res.status(500).json({ message: "Failed to delete owner" });
+  }
+});
+
+app.put("/api/admin/owners/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email } = req.body;
+    await query("UPDATE owners SET name = ?, email = ? WHERE id = ?", [name, email, id]);
+    res.json({ message: "Owner updated successfully" });
+  } catch (err) {
+    console.error("Error updating owner:", err);
+    res.status(500).json({ message: "Failed to update owner" });
+  }
+});
+
+app.patch("/api/admin/owners/:id/status", async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    await query("UPDATE owners SET status = ? WHERE id = ?", [status, id]);
+    res.json({ message: "Status updated successfully" });
+  } catch (err) {
+    console.error("Error updating status:", err);
+    res.status(500).json({ message: "Failed to update status" });
+  }
+});
+app.patch("/api/admin/owners/:id/verify", async (req, res) => {
+  const { id } = req.params;
+  const { verified } = req.body;
+
+  try {
+    await query("UPDATE owners SET verified = ? WHERE id = ?", [verified, id]);
+    res.json({ message: "Verification status updated" });
+  } catch (err) {
+    console.error("Error updating verification:", err);
+    res.status(500).json({ message: "Failed to update verification" });
+  }
+});
+
+// GET all products
+app.get("/api/admin/products", async (req, res) => {
+  try {
+    const products = await query(`
+      SELECT id, title, price, rent_price, category, image, \`condition\`, location,
+             available, is_rentable, owner_id, verified, created_at
+      FROM products
+      ORDER BY created_at DESC
+    `);
+    res.json(products);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to fetch products" });
+  }
+});
+
+
+app.put("/api/admin/products/:id", async (req, res) => {
+  const { id } = req.params;
+  const {
+    title,
+    description,
+    price,
+    rent_price,
+    category,
+    image,
+    condition,
+    location,
+    available,
+    is_rentable,
+    owner_id,
+    verified
+  } = req.body;
+
+  try {
+    await query(
+      `UPDATE products 
+       SET title = ?, 
+           description = ?, 
+           price = ?, 
+           rent_price = ?, 
+           category = ?, 
+           image = ?, 
+           \`condition\` = ?, 
+           location = ?, 
+           available = ?, 
+           is_rentable = ?, 
+           owner_id = ?, 
+           verified = ? 
+       WHERE id = ?`,
+      [
+        title,
+        description,
+        price,
+        rent_price,
+        category,
+        image,
+        condition,
+        location,
+        available,
+        is_rentable,
+        owner_id,
+        verified,
+        id
+      ]
+    );
+
+    res.json({ message: "Product updated successfully" });
+  } catch (err) {
+    console.error("Update error:", err);
+    res.status(500).json({ message: "Failed to update product" });
+  }
+});
+
+
+
+// DELETE a product
+app.delete("/api/admin/products/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    await query("DELETE FROM products WHERE id = ?", [id]);
+    res.json({ message: "Product deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to delete product" });
+  }
+});
+
+// GET all listings
+app.get('/api/admin/listings', async (req, res) => {
+  try {
+    const rows = await query("SELECT * FROM listings ORDER BY id DESC");
+    res.json(rows);
+  } catch (err) {
+    console.error('GET listings error:', err.message);
+    res.status(500).json({ message: "Failed to fetch listings" });
+  }
+});
+
+
+
+
+
+// UPDATE a listing
+app.put('/api/admin/listings/:id', async (req, res) => {
+  const { id } = req.params;
+  const {
+    title, description, price, location,
+    category, subcategory, image, verified
+  } = req.body;
+
+  // Validation
+  if (!title || !category) {
+    return res.status(400).json({ message: "Title and Category are required" });
+  }
+
+  const validCategories = ['clothing', 'property', 'appliance'];
+  if (!validCategories.includes(category)) {
+    return res.status(400).json({ message: "Invalid category" });
+  }
+
+  try {
+    await query(
+      `UPDATE listings SET title = ?, description = ?, price = ?, location = ?, category = ?, subcategory = ?, image = ?, verified = ? WHERE id = ?`,
+      [
+        title,
+        description || null,
+        price || null,
+        location || null,
+        category,
+        subcategory || null,
+        image || null,
+        parseInt(verified) || 0,
+        id
+      ]
+    );
+    res.json({ message: "Listing updated successfully" });
+  } catch (err) {
+    console.error('PUT listings error:', err.message);
+    res.status(500).json({ message: "Failed to update listing" });
+  }
+});
+
+
+
+// DELETE a listing
+app.delete('/api/admin/listings/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    await query("DELETE FROM listings WHERE id = ?", [id]);
+    res.json({ message: "Listing deleted successfully" });
+  } catch (err) {
+    console.error('DELETE listings error:', err.message);
+    res.status(500).json({ message: "Failed to delete listing" });
+  }
+});
+
+
+app.get('/api/admin/messages/users', async (req, res) => {
+  try {
+    const users = await query(`
+      SELECT u.id, u.name, u.email,
+        (SELECT COUNT(*) FROM messages m WHERE m.user_id = u.id AND m.sender = 'user' AND m.is_read = 0) AS unread_count
+      FROM users u
+      WHERE u.id IN (SELECT DISTINCT user_id FROM messages)
+      ORDER BY unread_count DESC, u.name ASC;
+    `);
+    res.json(users);
+  } catch (err) {
+    console.error('Error fetching users:', err);
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+app.get('/api/admin/messages/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const messages = await query(
+      `SELECT * FROM messages WHERE user_id = ? ORDER BY timestamp ASC`,
+      [userId]
+    );
+    res.json(messages);
+  } catch (err) {
+    console.error('Error fetching messages:', err);
+    res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
+app.post('/api/admin/messages/:userId', async (req, res) => {
+  const { userId } = req.params;
+  const { text, timestamp } = req.body;
+
+  try {
+    await query(
+      `INSERT INTO messages (user_id, sender, text, timestamp, is_read) VALUES (?, 'admin', ?, ?, 1)`,
+      [userId, text, timestamp]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error sending message:', err);
+    res.status(500).json({ error: 'Failed to send message' });
+  }
+});
+
+app.put('/api/admin/messages/:userId/mark-read', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    await query(
+      `UPDATE messages SET is_read = 1 WHERE user_id = ? AND sender = 'user' AND is_read = 0`,
+      [userId]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Error marking messages as read:', err);
+    res.status(500).json({ error: 'Failed to update read status' });
+  }
+});
+
+app.get('/api/user/messages/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // Admin ke messages read mark karo
+    await query(
+      "UPDATE messages SET is_read = 1 WHERE user_id = ? AND sender = 'admin'",
+      [userId]
+    );
+
+    const messages = await query(
+      "SELECT * FROM messages WHERE user_id = ? ORDER BY timestamp ASC",
+      [userId]
+    );
+
+    res.json(messages);
+  } catch (err) {
+    console.error('❌ Error fetching user messages:', err);
+    res.status(500).json({ error: 'Failed to load messages' });
+  }
+});
+
+// ✅ DELETE all messages of a specific user (admin-side)
+app.delete('/api/admin/messages/:userId', async (req, res) => {
+  const userId = req.params.userId;
+
+  try {
+    const result = await query('DELETE FROM messages WHERE user_id = ?', [userId]);
+    res.status(200).json({ message: 'Chat cleared', deleted: result.affectedRows });
+  } catch (err) {
+    console.error("❌ Error clearing chat:", err);
+    res.status(500).json({ error: "Server error while clearing chat" });
+  }
+});
+
+
+app.post('/api/user/messages/:userId', async (req, res) => {
+  const { userId } = req.params;
+  const { text, timestamp } = req.body;
+
+  try {
+    const result = await query(
+      "INSERT INTO messages (sender, text, timestamp, user_id, is_read, delivered) VALUES (?, ?, ?, ?, ?, ?)",
+      ['user', text, timestamp, userId, 0, 1]
+    );
+
+    res.json({ insertedId: result.insertId });
+  } catch (err) {
+    console.error('❌ Error sending user message:', err);
+    res.status(500).json({ error: 'Failed to send message' });
+  }
+});
+
+// ✅ DELETE API to clear all messages for a user
+app.delete('/api/user/messages/:userId', async (req, res) => {
+  const userId = req.params.userId;
+
+  try {
+    const result = await query('DELETE FROM messages WHERE user_id = ?', [userId]);
+    res.status(200).json({
+      message: 'Chat cleared successfully',
+      deleted: result.affectedRows
+    });
+  } catch (error) {
+    console.error('❌ Error deleting messages:', error);
+    res.status(500).json({ error: 'Server error while clearing chat' });
+  }
+});
+
+
+
+
 // order 
 
 app.post("/api/orders", async (req, res) => {
@@ -629,7 +1041,7 @@ app.put("/api/products/:id", async (req, res) => {
         rent_price = ?, 
         category = ?, 
         image = ?, 
-        condition = ?, 
+        \`condition\` = ?, 
         location = ?, 
         available = ?, 
         is_rentable = ?, 
@@ -729,17 +1141,29 @@ app.put("/api/products/:id", async (req, res) => {
     const { id } = req.params;
     const { title, price, rent_price, category, location, condition } = req.body;
 
-    await query(
-      `UPDATE products SET title=?, price=?, rent_price=?, category=?, location=?, condition=? WHERE id=?`,
+    const [result] = await query(
+      `UPDATE products SET 
+        title = ?, 
+        price = ?, 
+        rent_price = ?, 
+        category = ?, 
+        location = ?, 
+        \`condition\` = ? 
+      WHERE id = ?`,
       [title, price, rent_price, category, location, condition, id]
     );
 
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
     res.json({ message: "Product updated successfully" });
   } catch (err) {
-    console.error("Update error:", err);
-    res.status(500).json({ error: "Failed to update product" });
+    console.error("❌ Error updating product:", err);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
+
 
 
 // ✅ Get Orders of Specific Owner

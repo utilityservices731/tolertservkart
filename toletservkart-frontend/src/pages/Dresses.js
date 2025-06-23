@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../App.css";
 
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+
 const Dresses = () => {
   const navigate = useNavigate();
 
@@ -78,23 +81,29 @@ const Dresses = () => {
   };
 
   return (
-    <div className="dresses-page">
-      <h2 className="dresses-heading">Discover Trendy Dresses</h2>
-      <p className="dresses-subtext">Explore stunning outfits perfect for parties, weddings, and events.</p>
+    <>
+      <Header />
 
-      <div className="product-grid">
-        {products.map((product) => (
-          <div key={product.id} className="product-card">
-            <img src={product.image} alt={product.title} className="product-image" />
-            <h3 className="product-title">{product.title}</h3>
-            <p className="product-price">{product.price}</p>
-            <button className="product-btn" onClick={() => handleAddToCart(product)}>
-              🛒 Rent Now
-            </button>
-          </div>
-        ))}
+      <div className="dresses-page">
+        <h2 className="dresses-heading">Discover Trendy Dresses</h2>
+        <p className="dresses-subtext">Explore stunning outfits perfect for parties, weddings, and events.</p>
+
+        <div className="product-grid">
+          {products.map((product) => (
+            <div key={product.id} className="product-card">
+              <img src={product.image} alt={product.title} className="product-image" />
+              <h3 className="product-title">{product.title}</h3>
+              <p className="product-price">{product.price}</p>
+              <button className="product-btn" onClick={() => handleAddToCart(product)}>
+                🛒 Rent Now
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
-    </div>
+
+      <Footer />
+    </>
   );
 };
 

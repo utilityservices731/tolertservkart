@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 import "../App.css";
 
 function ChatPage() {
@@ -10,7 +12,7 @@ function ChatPage() {
   const conversationId = "abc123"; // Replace with actual ID (from params or props)
   const sender = "buyer"; // Or "seller", based on login info
 
-  // Fetch chat messages on mount
+  // Fetch messages on mount
   useEffect(() => {
     const fetchMessages = async () => {
       try {
@@ -26,10 +28,8 @@ function ChatPage() {
     fetchMessages();
   }, [conversationId]);
 
-  // Send message handler
   const handleSend = async (e) => {
     e.preventDefault();
-
     if (!newMsg.trim()) return;
 
     const msgData = {
@@ -49,44 +49,50 @@ function ChatPage() {
   };
 
   return (
-    <div className="chat-page-wrapper">
-      <section className="chat-info-section">
-        <h1 className="chat-intro-heading">Messaging Center</h1>
-        <p>
-          Communicate directly with the seller or buyer regarding any listing.
-          Ask about availability, pricing, pickup, or rental terms.
-          Keep conversations respectful and avoid sharing personal details.
-          <br /><br />
-          All chats are securely stored for reference. For issues, contact our support via the Help section.
-        </p>
-      </section>
+    <>
+      <Header />
 
-      <div className="chat-container">
-        <h2 className="chat-header">Chat with Seller</h2>
+      <div className="chat-page-wrapper">
+        <section className="chat-info-section">
+          <h1 className="chat-intro-heading">Messaging Center</h1>
+          <p>
+            Communicate directly with the seller or buyer regarding any listing.
+            Ask about availability, pricing, pickup, or rental terms.
+            Keep conversations respectful and avoid sharing personal details.
+            <br /><br />
+            All chats are securely stored for reference. For issues, contact our support via the Help section.
+          </p>
+        </section>
 
-        {loading ? (
-          <p>Loading messages...</p>
-        ) : (
-          <div className="chat-box">
-            {messages.map((msg) => (
-              <div key={msg.id} className={`chat-bubble ${msg.sender}`}>
-                {msg.text}
-              </div>
-            ))}
-          </div>
-        )}
+        <div className="chat-container">
+          <h2 className="chat-header">Chat with Seller</h2>
 
-        <form className="chat-input" onSubmit={handleSend}>
-          <input
-            type="text"
-            placeholder="Type your message..."
-            value={newMsg}
-            onChange={(e) => setNewMsg(e.target.value)}
-          />
-          <button type="submit">Send</button>
-        </form>
+          {loading ? (
+            <p>Loading messages...</p>
+          ) : (
+            <div className="chat-box">
+              {messages.map((msg, index) => (
+                <div key={index} className={`chat-bubble ${msg.sender}`}>
+                  {msg.text}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <form className="chat-input" onSubmit={handleSend}>
+            <input
+              type="text"
+              placeholder="Type your message..."
+              value={newMsg}
+              onChange={(e) => setNewMsg(e.target.value)}
+            />
+            <button type="submit">Send</button>
+          </form>
+        </div>
       </div>
-    </div>
+
+      <Footer />
+    </>
   );
 }
 

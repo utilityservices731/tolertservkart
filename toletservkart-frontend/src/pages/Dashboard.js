@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+
 import { Link } from "react-router-dom";
 
 import Header from '../components/Header';
@@ -13,7 +14,10 @@ function Dashboard() {
   const [loadingOrders, setLoadingOrders] = useState(false);
 const [wishlist, setWishlist] = useState([]);
 const [wishlistLoading, setWishlistLoading] = useState(true);
-
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [messageLoading, setMessageLoading] = useState(false);
+  const chatBoxRef = useRef(null);
   const userAds = [
     { id: 1, title: '1BHK Apartment for Rent', price: '₹8000/month', status: 'Active' },
     { id: 2, title: 'Designer Dress on Rent', price: '₹1500', status: 'Pending Approval' },
@@ -84,8 +88,57 @@ const handleRemoveWishlist = async (wishlistId) => {
   }
 };
 
+  useEffect(() => {
+    let interval;
+    if (activeTab === 'messages') {
+      const fetchMessages = async () => {
+        try {
+          const res = await axios.get(`http://localhost:5000/api/user/messages/${user.id}`);
+          setMessages(res.data);
+        } catch (err) {
+          console.error('❌ Error loading messages:', err);
+        } finally {
+          setMessageLoading(false);
+        }
+      };
+      fetchMessages();
+      interval = setInterval(fetchMessages, 5000);
+    }
+    return () => clearInterval(interval);
+  }, [activeTab, user.id]);
 
+  const handleSendMessage = async () => {
+    if (newMessage.trim() === '') return;
 
+    const newMsg = {
+      sender: 'user',
+      text: newMessage,
+      timestamp: new Date().toISOString(),
+    };
+
+    try {
+      const res = await axios.post(`http://localhost:5000/api/user/messages/${user.id}`, newMsg);
+      if (res.data && res.data.insertedId) {
+        setMessages((prev) => [
+          ...prev,
+          { ...newMsg, is_read: 0, delivered: 1 }
+        ]);
+      }
+      setNewMessage('');
+    } catch (err) {
+      console.error('❌ Failed to send message:', err);
+    }
+  };
+
+  const handleClearChat = async () => {
+    if (!window.confirm("Clear entire chat?")) return;
+    try {
+      await axios.delete(`http://localhost:5000/api/user/messages/${user.id}`);
+      setMessages([]);
+    } catch (err) {
+      console.error("❌ Failed to clear chat:", err);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.clear();
@@ -274,7 +327,60 @@ const handleRemoveWishlist = async (wishlistId) => {
 )}
 
 
-          {activeTab === 'messages' && <p>No messages yet.</p>}
+        {activeTab === 'messages' && (
+            <section className="chat-section">
+              <h3 className="mb-3">💬 Messages</h3>
+              <div className="text-end mb-2">
+                <button className="btn btn-danger btn-sm" onClick={handleClearChat}>
+                  🧹 Clear Chat
+                </button>
+              </div>
+              <div ref={chatBoxRef} className="chat-box bg-light p-3 rounded" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                {messageLoading ? (
+                  <p>Loading chat...</p>
+                ) : messages.length === 0 ? (
+                  <p>No messages yet.</p>
+                ) : (
+                  messages.map((msg, i) => (
+                    <div
+                      key={i}
+                      className={`chat-message mb-2 ${msg.sender === 'user' ? 'text-end' : 'text-start'}`}
+                    >
+                      <div
+                        className={`d-inline-block p-2 rounded ${
+                          msg.sender === 'user' ? 'bg-primary text-white' : 'bg-white border'
+                        }`}
+                        style={{ maxWidth: '70%' }}
+                      >
+                        <p className="mb-1">{msg.text}</p>
+                        <div className="d-flex justify-content-end align-items-center">
+                          <small className="text-light me-1">
+                            {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </small>
+                          {msg.sender === 'user' && (
+                            <span className={`check-icon ${msg.is_read === 1 ? 'text-success' : 'text-white'}`}>
+                              ✓✓
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+              <div className="chat-input mt-3 d-flex">
+                <input
+                  type="text"
+                  className="form-control me-2"
+                  placeholder="Type your message..."
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                />
+                <button className="btn btn-success" onClick={handleSendMessage}>Send</button>
+              </div>
+            </section>
+          )}
+
           {activeTab === 'post' && <p>Click <a href="/upload">here</a> to post a new ad.</p>}
           {activeTab === 'settings' && <p>Settings section coming soon.</p>}
         </main>

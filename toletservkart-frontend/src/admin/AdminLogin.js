@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -30,48 +31,65 @@ function AdminLogin() {
   };
 
   return (
-    <div className="admin-login-page">
-      <div className="admin-login-container">
-        <div className="admin-login-card">
-          <h2 className="login-title">Admin Login</h2>
-          <p className="login-subtext">Login to access the admin dashboard</p>
+    <div className="container-fluid  bg-gradient vh-100 d-flex justify-content-center align-items-center">
+      <div className="card shadow p-4" style={{ maxWidth: "400px", width: "100%", borderTop: "5px solid orange" }}>
+        <h3 className="text-center mb-3 text-danger">Admin Login</h3>
+        <p className="text-center text-muted mb-4">Access your admin dashboard</p>
 
-          <form className="login-form" onSubmit={handleLogin}>
-            <label htmlFor="email">Email</label>
-            <div className="input-icon-wrapper">
+        <form onSubmit={handleLogin}>
+          <div className="mb-3">
+            <label htmlFor="email" className="form-label">Email address</label>
+            <div className="input-group">
+              <span className="input-group-text bg-light">📧</span>
               <input
-                id="email"
                 type="email"
+                className="form-control"
+                id="email"
                 placeholder="admin@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
-              <span className="input-icon">📧</span>
             </div>
+          </div>
 
-            <label htmlFor="password">Password</label>
-            <div className="input-icon-wrapper">
+          <div className="mb-3">
+            <label htmlFor="password" className="form-label">Password</label>
+            <div className="input-group">
+              <span className="input-group-text bg-light">🔒</span>
               <input
-                id="password"
                 type="password"
+                className="form-control"
+                id="password"
                 placeholder="********"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
-              <span className="input-icon">🔒</span>
             </div>
+          </div>
 
-            <div className="forgot-password">
-              <a href="#">Forgot Password?</a>
-            </div>
+          <div className="mb-3 d-flex justify-content-between align-items-center">
+            <Link to="/forgot-password" className="text-decoration-none small text-primary">Forgot Password?</Link>
+          </div>
 
-            <button type="submit" className="login-button" disabled={loading}>
-              {loading ? "Logging in..." : "Login"}
+          <div className="d-grid mb-3">
+            <button
+              type="submit"
+              className="btn btn-danger"
+              disabled={loading}
+            >
+              {loading ? 'Logging in...' : 'Login'}
             </button>
-          </form>
-        </div>
+          </div>
+        </form>
+
+        <p className="text-center text-muted small mt-3">
+          Don’t have an account?{" "}
+          <Link to="/admin-register" className="text-decoration-none text-danger fw-bold">
+            Register Now
+          </Link>
+        </p>
       </div>
     </div>
   );

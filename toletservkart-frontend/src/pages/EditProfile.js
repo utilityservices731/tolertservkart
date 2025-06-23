@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../App.css';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 function EditProfile() {
   const [formData, setFormData] = useState({
@@ -13,7 +15,6 @@ function EditProfile() {
   const [error, setError] = useState('');
   const token = localStorage.getItem('userToken');
 
-  // 🧠 Fetch user data on component mount
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -45,14 +46,12 @@ function EditProfile() {
     fetchUser();
   }, [token]);
 
-  // 👂 Handle Input Change
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setUpdated(false);
     setError('');
   };
 
-  // 📤 Handle Form Submit (Update Profile)
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -80,60 +79,68 @@ function EditProfile() {
   };
 
   return (
-    <div className="profile-container">
-      <h2 className="profile-title">Edit Profile</h2>
-      <p className="profile-subtitle">Keep your profile updated to get better responses and trust!</p>
+    <>
+      <Header />
 
-      <div className="profile-info-section">
-        <h3>About This Section</h3>
-        <p>
-          In this section, you can update your personal details like name, email, password, and a short bio.
-          Keeping your profile information up-to-date helps others know you better and increases trust when
-          you interact on the platform.
+      <div className="profile-container">
+        <h2 className="profile-title">Edit Profile</h2>
+        <p className="profile-subtitle">
+          Keep your profile updated to get better responses and trust!
         </p>
+
+        <div className="profile-info-section">
+          <h3>About This Section</h3>
+          <p>
+            In this section, you can update your personal details like name, email, password, and a short bio.
+            Keeping your profile information up-to-date helps others know you better and increases trust when
+            you interact on the platform.
+          </p>
+        </div>
+
+        {updated && <div className="profile-success">✅ Your profile has been updated successfully!</div>}
+        {error && <div className="profile-error">❌ {error}</div>}
+
+        <form className="profile-form" onSubmit={handleSubmit}>
+          <input
+            className="profile-input"
+            type="text"
+            name="name"
+            placeholder="Enter your full name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+          />
+          <input
+            className="profile-input"
+            type="email"
+            name="email"
+            placeholder="Enter your email address"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+          <input
+            className="profile-input"
+            type="password"
+            name="password"
+            placeholder="Change password (optional)"
+            value={formData.password}
+            onChange={handleChange}
+          />
+          <textarea
+            className="profile-textarea"
+            name="bio"
+            placeholder="Write a short bio about yourself (optional)"
+            value={formData.bio}
+            onChange={handleChange}
+          ></textarea>
+
+          <button className="profile-btn" type="submit">Update</button>
+        </form>
       </div>
 
-      {updated && <div className="profile-success">✅ Your profile has been updated successfully!</div>}
-      {error && <div className="profile-error">❌ {error}</div>}
-
-      <form className="profile-form" onSubmit={handleSubmit}>
-        <input
-          className="profile-input"
-          type="text"
-          name="name"
-          placeholder="Enter your full name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-        />
-        <input
-          className="profile-input"
-          type="email"
-          name="email"
-          placeholder="Enter your email address"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
-        <input
-          className="profile-input"
-          type="password"
-          name="password"
-          placeholder="Change password (optional)"
-          value={formData.password}
-          onChange={handleChange}
-        />
-        <textarea
-          className="profile-textarea"
-          name="bio"
-          placeholder="Write a short bio about yourself (optional)"
-          value={formData.bio}
-          onChange={handleChange}
-        ></textarea>
-
-        <button className="profile-btn" type="submit">Update</button>
-      </form>
-    </div>
+      <Footer />
+    </>
   );
 }
 

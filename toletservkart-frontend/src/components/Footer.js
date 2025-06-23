@@ -29,9 +29,9 @@ const Footer = () => {
           <h4>Quick Links</h4>
           <ul>
             <li><Link to="/">Home</Link></li>
-            <li><Link to="/property">Property</Link></li>
+            {/* <li><Link to="/property">Property</Link></li>
             <li><Link to="/home-appliances">Home Appliances</Link></li>
-            <li><Link to="/dresses">Dresses</Link></li>
+            <li><Link to="/dresses">Dresses</Link></li> */}
             <li><Link to="/upload">Post Ad</Link></li>
             <li><Link to="/login">Login</Link></li>
             <li><Link to="/edit-profile">Edit Profile</Link></li>
