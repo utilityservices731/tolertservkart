@@ -47,7 +47,7 @@ import AdminPaymentHistory from './admin/AdminPaymentHistory';
 import AdminFeedbacks from './admin/AdminFeedbacks';
 import AdminNotifications from './admin/AdminNotifications';
 import AdminSettings from './admin/AdminSettings';
-
+import SearchResults from './pages/SearchResults'; 
 
 import PrivateRoute from './components/PrivateRoute';
 
@@ -78,6 +78,7 @@ function App() {
         <Route path="/dresses" element={<Dresses />} />
         <Route path="/cart" element={<CartPage />} />
 <Route path="/explore-all" element={<ExploreAllProducts />} />
+<Route path="/search" element={<SearchResults />} />
         {/* Owner Routes */}
         <Route path="/owner-login" element={<OwnerLogin />} />
         <Route path="/owner-register" element={<OwnerRegister />} />

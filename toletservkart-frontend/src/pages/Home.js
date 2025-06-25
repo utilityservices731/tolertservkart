@@ -10,25 +10,30 @@ const Home = () => {
   const [categoryProducts, setCategoryProducts] = useState({});
   const [listings, setListings] = useState([]);
 
+  // ✅ Get selected city from localStorage
+  const selectedCity = localStorage.getItem('selectedCity') || '';
+
   // Fetch category-wise products
   useEffect(() => {
-    axios.get("http://localhost:5000/api/category-wise-products")
+    axios.get("http://localhost:5000/api/category-wise-products", {
+      params: selectedCity ? { city: selectedCity } : {},
+    })
       .then(res => {
-        console.log("Fetched Categories:", res.data);
         setCategoryProducts(res.data);
       })
       .catch(err => console.error("Category fetch error", err));
-  }, []);
+  }, [selectedCity]);
 
   // Fetch latest listings
   useEffect(() => {
-    axios.get("http://localhost:5000/api/latest-listings")
+    axios.get("http://localhost:5000/api/latest-listings", {
+      params: selectedCity ? { city: selectedCity } : {},
+    })
       .then(res => {
-        console.log("Fetched Listings:", res.data);
         setListings(res.data);
       })
       .catch(err => console.error("Listings fetch error", err));
-  }, []);
+  }, [selectedCity]);
 
   return (
     <>
@@ -71,7 +76,7 @@ const Home = () => {
                   {items.slice(0, 4).map((item, index) => (
                     <div className="col-sm-6 col-md-3" key={index}>
                       <Link
-                        to={`/listing/${item.id}`} // Ensure item.id is correct
+                        to={`/listing/${item.id}`}
                         className="text-decoration-none text-dark"
                       >
                         <div className="card h-100 shadow-sm category-card-hover">
@@ -79,12 +84,7 @@ const Home = () => {
                             src={item.image}
                             alt={item.name || category}
                             className="card-img-top"
-                            style={{
-                              height: '160px',
-                              objectFit: 'cover',
-                              borderTopLeftRadius: '12px',
-                              borderTopRightRadius: '12px',
-                            }}
+                           
                           />
                           <div className="card-body text-center">
                             <h6 className="card-title">{item.name}</h6>
@@ -115,11 +115,7 @@ const Home = () => {
                         src={item.image}
                         alt={item.title}
                         className="card-img-top"
-                        style={{
-                          height: "160px",
-                          objectFit: "cover",
-                          borderRadius: "12px",
-                        }}
+                        
                       />
                       <div className="card-body text-center">
                         <h5>{item.title}</h5>

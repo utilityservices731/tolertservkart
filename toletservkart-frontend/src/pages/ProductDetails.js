@@ -107,14 +107,28 @@ function ProductDetails() {
       <div className="container my-5">
         <div className="row g-5 align-items-start">
           {/* Product Image */}
-          <div className="col-md-6">
-            <img
-              src={product.image || 'https://via.placeholder.com/500x600?text=No+Image'}
-              alt={product.title}
-              className="img-fluid rounded shadow-sm w-100"
-              style={{ objectFit: 'cover', maxHeight: '500px' }}
-            />
-          </div>
+<div className="col-md-6">
+  <div
+    style={{
+      width: '100%',
+      height: '500px',
+      backgroundColor: '#f8f9fa',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: '0.5rem',
+      overflow: 'hidden',
+    }}
+  >
+    <img
+      src={product.image || 'https://via.placeholder.com/500x600?text=No+Image'}
+      alt={product.title}
+      className="img-fluid"
+    
+    />
+  </div>
+</div>
+
 
           {/* Product Details */}
           <div className="col-md-6">

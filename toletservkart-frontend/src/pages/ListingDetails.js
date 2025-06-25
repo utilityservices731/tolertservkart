@@ -106,12 +106,13 @@ function ListingDetails() {
         <div className="row g-5 align-items-start">
           {/* Image */}
           <div className="col-md-6">
-            <img
-              src={listing.image || 'https://via.placeholder.com/600x400?text=No+Image'}
-              alt={listing.title}
-              className="img-fluid rounded shadow-sm"
-              style={{ maxHeight: '500px', objectFit: 'cover', width: '100%' }}
-            />
+           <img
+  src={listing.image || 'https://via.placeholder.com/600x400?text=No+Image'}
+  alt={listing.title}
+  className="img-fluid rounded shadow-sm"
+
+/>
+
           </div>
 
           {/* Details */}

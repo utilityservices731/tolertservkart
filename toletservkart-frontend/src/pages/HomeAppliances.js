@@ -70,17 +70,41 @@ const HomeAppliances = () => {
         <p className="dresses-subtext">Choose from top appliances to make your daily life easier.</p>
 
         <div className="product-grid">
-          {appliances.map((item) => (
-            <div className="product-card" key={item.id}>
-              <img src={item.image} alt={item.name} className="product-image" />
-              <div className="product-title">{item.name}</div>
-              <div className="product-price">{item.price}</div>
-              <button className="product-btn" onClick={() => handleAddToCart(item)}>
-                🛒 Rent Now
-              </button>
-            </div>
-          ))}
-        </div>
+  {appliances.map((item) => (
+    <div className="product-card shadow rounded" key={item.id}>
+      <div
+        style={{
+          height: '250px',
+          backgroundColor: '#f9f9f9',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+          borderRadius: '0.5rem',
+        }}
+      >
+        <img
+          src={item.image || 'https://via.placeholder.com/250x250?text=No+Image'}
+          alt={item.name}
+          style={{
+            maxWidth: '100%',
+            maxHeight: '100%',
+            objectFit: 'contain',
+          }}
+        />
+      </div>
+      <div className="mt-2 fw-bold">{item.name}</div>
+      <div className="text-muted">₹{item.price}</div>
+      <button
+        className="product-btn btn btn-sm btn-primary w-100 mt-2"
+        onClick={() => handleAddToCart(item)}
+      >
+        🛒 Rent Now
+      </button>
+    </div>
+  ))}
+</div>
+
       </div>
 
       <Footer />

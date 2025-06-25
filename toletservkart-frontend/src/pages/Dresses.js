@@ -89,17 +89,34 @@ const Dresses = () => {
         <p className="dresses-subtext">Explore stunning outfits perfect for parties, weddings, and events.</p>
 
         <div className="product-grid">
-          {products.map((product) => (
-            <div key={product.id} className="product-card">
-              <img src={product.image} alt={product.title} className="product-image" />
-              <h3 className="product-title">{product.title}</h3>
-              <p className="product-price">{product.price}</p>
-              <button className="product-btn" onClick={() => handleAddToCart(product)}>
-                🛒 Rent Now
-              </button>
-            </div>
-          ))}
-        </div>
+  {products.map((product) => (
+    <div key={product.id} className="product-card shadow rounded">
+      <div
+        style={{
+          height: '250px',
+          backgroundColor: '#f8f9fa',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+          borderRadius: '0.5rem',
+        }}
+      >
+        <img
+          src={product.image || 'https://via.placeholder.com/250x250?text=No+Image'}
+          alt={product.title}
+        
+        />
+      </div>
+      <h3 className="product-title mt-2">{product.title}</h3>
+      <p className="product-price text-muted">₹ {product.price}</p>
+      <button className="product-btn btn btn-sm btn-primary w-100 mt-2" onClick={() => handleAddToCart(product)}>
+        🛒 Rent Now
+      </button>
+    </div>
+  ))}
+</div>
+
       </div>
 
       <Footer />

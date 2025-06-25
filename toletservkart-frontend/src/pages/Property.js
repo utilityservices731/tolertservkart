@@ -50,18 +50,39 @@ const Property = () => {
         <p className="page-subtext">
           Browse properties listed by verified owners. Find homes, offices, and more for rent or purchase.
         </p>
-        <div className="product-grid">
-          {properties.map((item) => (
-            <div className="product-card" key={item.id}>
-              <img src={item.imageUrl} alt={item.title} className="product-image" />
-              <h4>{item.title}</h4>
-              <p>₹{item.price} / month</p>
-              <button className="product-btn" onClick={() => handleAddToCart(item)}>
-                🏠 Rent Now
-              </button>
-            </div>
-          ))}
-        </div>
+      <div className="product-grid">
+  {properties.map((item) => (
+    <div className="product-card shadow rounded" key={item.id}>
+      <div
+        style={{
+          height: '250px',
+          backgroundColor: '#f9f9f9',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+          borderRadius: '0.5rem',
+        }}
+      >
+        <img
+          src={item.imageUrl || 'https://via.placeholder.com/250x250?text=No+Image'}
+          alt={item.title}
+          style={{
+            maxWidth: '100%',
+            maxHeight: '100%',
+            objectFit: 'contain',
+          }}
+        />
+      </div>
+      <h4 className="mt-2">{item.title}</h4>
+      <p className="text-muted">₹{item.price} / month</p>
+      <button className="product-btn btn btn-sm btn-success w-100 mt-2" onClick={() => handleAddToCart(item)}>
+        🏠 Rent Now
+      </button>
+    </div>
+  ))}
+</div>
+
       </div>
 
       <Footer />

@@ -736,15 +736,96 @@ app.delete("/api/wishlist/:wishlistId", async (req, res) => {
 
 
 // ---------- GET ALL LISTINGS ----------
-app.get('/api/listings', async (req, res) => {
-  try {
-    const results = await query('SELECT * FROM listings');
-    res.json(results);
-  } catch (err) {
-    console.error("DB error:", err);
-    res.status(500).json({ error: 'Database error' });
+app.get("/api/listings", (req, res) => {
+  const { category, city } = req.query;
+  let query = `SELECT * FROM listings WHERE verified = 1`;
+  const params = [];
+
+if (category) {
+  query += ` AND LOWER(category) = ?`;
+  params.push(category.toLowerCase());
+}
+
+  if (city) {
+    query += ` AND LOWER(location) LIKE LOWER(?)`;
+    params.push(`%${city}%`);
   }
+
+  query += ` ORDER BY id DESC`;
+
+  db.query(query, params, (err, results) => {
+    if (err) {
+      console.error("Error fetching listings:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    res.json(results);
+  });
 });
+
+app.get('/api/search', (req, res) => {
+  const { query, city } = req.query;
+
+  const values = [];
+  const listingsSQL = `
+    SELECT id, title, description, image, price, location, 'listing' AS source 
+    FROM listings WHERE verified = 1
+  `;
+  const productsSQL = `
+    SELECT id, title, description, image, price, location, 'product' AS source 
+    FROM products WHERE verified = 1
+  `;
+
+  const conditions = [];
+  if (query) {
+    conditions.push("title LIKE ?");
+    values.push(`%${query}%`);
+  }
+  if (city) {
+    conditions.push("location = ?");
+    values.push(city);
+  }
+
+  const conditionStr = conditions.length ? ` AND ${conditions.join(" AND ")}` : "";
+
+  const finalListingsQuery = listingsSQL + conditionStr;
+  const finalProductsQuery = productsSQL + conditionStr;
+
+  const finalQuery = `${finalListingsQuery} UNION ${finalProductsQuery} ORDER BY id DESC`;
+
+  db.query(finalQuery, values.concat(values), (err, results) => {
+    if (err) {
+      console.error('Search query error:', err);
+      return res.status(500).json({ error: 'Search failed' });
+    }
+    res.json(results);
+  });
+});
+
+
+app.get('/api/admin/orders', (req, res) => {
+  const query = `SELECT * FROM orders ORDER BY created_at DESC`;
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("Order fetch error:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    // Parse cart_items if JSON
+    const parsedResults = results.map(order => {
+      try {
+        order.cart_items = JSON.parse(order.cart_items);
+      } catch (e) {
+        order.cart_items = [];
+      }
+      return order;
+    });
+
+    res.json(parsedResults);
+  });
+});
+
 
 // ---------- ADMINS DASHBOARD DATA ----------
 app.get("/api/admins/dashboard", async (req, res) => {
@@ -787,6 +868,52 @@ app.get("/api/admins/dashboard", async (req, res) => {
 });
 
 
+// ⚙️ Load settings
+app.get('/api/admin/settings', (req, res) => {
+  const sql = 'SELECT * FROM admin_settings';
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Settings fetch error:', err);
+      return res.status(500).json({ message: 'Database error' });
+    }
+
+    const settings = {};
+    results.forEach(row => {
+      try {
+        settings[row.key] = JSON.parse(row.value);
+      } catch {
+        settings[row.key] = row.value;
+      }
+    });
+
+    res.json(settings);
+  });
+});
+
+// 💾 Save/update settings
+app.post('/api/admin/settings', (req, res) => {
+  const settings = req.body;
+
+  const promises = Object.entries(settings).map(([key, value]) => {
+    const jsonValue = JSON.stringify(value);
+    return new Promise((resolve, reject) => {
+      const sql = 'REPLACE INTO admin_settings (`key`, `value`) VALUES (?, ?)';
+      db.query(sql, [key, jsonValue], (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+  });
+
+  Promise.all(promises)
+    .then(() => res.json({ message: 'Settings saved' }))
+    .catch((err) => {
+      console.error('Settings save error:', err);
+      res.status(500).json({ message: 'Error saving settings' });
+    });
+});
+
+
 // =======================
 // In your server.js or routes file
 // =======================
@@ -804,17 +931,19 @@ app.get('/api/admin/users', async (req, res) => {
 
 // ✅ GET: /api/category-wise-products
 app.get("/api/category-wise-products", (req, res) => {
-  const query = `
-    SELECT 
-      category,
-      id,
-      title AS name,
-      image,
-      price
+  const { city } = req.query;
+
+  let query = `
+    SELECT category, id, title AS name, image, price, location
     FROM listings
     WHERE verified = 1
-    ORDER BY id DESC
   `;
+
+  if (city) {
+    query += ` AND location = ${db.escape(city)}`;
+  }
+
+  query += ` ORDER BY id DESC`;
 
   db.query(query, (err, results) => {
     if (err) {
@@ -848,14 +977,19 @@ app.get("/api/category-wise-products", (req, res) => {
 
 // ✅ GET: /api/latest-listings
 app.get("/api/latest-listings", (req, res) => {
-  const query = `
-    SELECT 
-      id, title, description, image, price, location
+  const { city } = req.query;
+
+  let query = `
+    SELECT id, title, description, image, price, location
     FROM listings
     WHERE verified = 1
-    ORDER BY id DESC
-    LIMIT 8
   `;
+
+  if (city) {
+    query += ` AND location = ${db.escape(city)}`;
+  }
+
+  query += ` ORDER BY id DESC LIMIT 8`;
 
   db.query(query, (err, results) => {
     if (err) {
@@ -867,16 +1001,68 @@ app.get("/api/latest-listings", (req, res) => {
   });
 });
 
+
 // backend index.js or server.js
-app.get('/api/all-products', async (req, res) => {
-  try {
-    const products = await query('SELECT * FROM products WHERE available = true');
-    res.json(products);
-  } catch (err) {
-    console.error('❌ Error fetching products:', err);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
+app.get("/api/all-products", (req, res) => {
+  const { city } = req.query;
+
+  const listingQuery = `
+    SELECT id, title, description, image, price, category, location, 'listings' AS source
+    FROM listings
+    WHERE verified = 1
+    ${city ? `AND location = ${db.escape(city)}` : ''}
+  `;
+
+  const productQuery = `
+    SELECT id, title, description, image, price, category, location, 'products' AS source
+    FROM products
+    WHERE verified = 1
+    ${city ? `AND location = ${db.escape(city)}` : ''}
+  `;
+
+  const finalQuery = `
+    (${listingQuery})
+    UNION
+    (${productQuery})
+    ORDER BY id DESC
+  `;
+
+  db.query(finalQuery, (err, results) => {
+    if (err) {
+      console.error("Error fetching all products:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    res.json(results);
+  });
 });
+
+app.get('/api/category/:name', (req, res) => {
+  const category = req.params.name;
+  const city = req.query.city;
+
+  const listingsQuery = `
+    SELECT id, title, price, description, image, location, 'listings' AS source 
+    FROM listings 
+    WHERE category = ${db.escape(category)} AND verified = 1
+    ${city ? `AND location = ${db.escape(city)}` : ''}
+  `;
+
+  const productsQuery = `
+    SELECT id, title, price, description, image, location, 'products' AS source 
+    FROM products 
+    WHERE category = ${db.escape(category)} AND verified = 1
+    ${city ? `AND location = ${db.escape(city)}` : ''}
+  `;
+
+  const finalQuery = `${listingsQuery} UNION ${productsQuery} ORDER BY id DESC`;
+
+  db.query(finalQuery, (err, results) => {
+    if (err) return res.status(500).json({ error: 'DB error' });
+    res.json(results);
+  });
+});
+
 
 // 👉 GET a product by ID
 // Single product from `products` table by ID
@@ -917,10 +1103,18 @@ app.get('/api/listings/:id', (req, res) => {
   });
 });
 
-app.get('/api/products', async (req, res) => {
-  const products = await Product.find(); // or filter by category etc.
-  res.json(products);
+app.get('/api/products', (req, res) => {
+  const sql = 'SELECT * FROM products';
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('Error fetching products:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    res.json(results);
+  });
 });
+
 
 // ✅ Place Order API (Only if logged in)
 // Protected Route - Place Order
