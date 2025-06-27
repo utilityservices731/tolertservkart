@@ -17,7 +17,7 @@ app.use('/uploads', express.static('uploads'));
 const db = mysql.createPool({
   host: "localhost",
   user: "root",
-  password: "Ranju@8482",
+  password: "",
   database: "toletservkart",
   // connectionLimit: 10,
 });
