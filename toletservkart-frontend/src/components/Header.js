@@ -1,44 +1,51 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '../App.css';
-import categories from '../utils/categories'; // ✅ Import categories
+import categories from '../utils/categories';
+import LocationContext from '../context/LocationContext';
 
 const Header = () => {
-  const [city, setCity] = useState('');
+  const navigate = useNavigate();
+
+  // ✅ Get city & pincode from Context
+  const { city, setCity, pincode, setPincode } = useContext(LocationContext);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [user, setUser] = useState(null);
   const [cartCount, setCartCount] = useState(0);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const storedUser = localStorage.getItem('userData');
     if (storedUser) setUser(JSON.parse(storedUser));
-
     const cartItems = JSON.parse(localStorage.getItem('cart')) || [];
     setCartCount(cartItems.length);
-
-    const storedCity = localStorage.getItem('selectedCity');
-    if (storedCity) setCity(storedCity);
   }, []);
 
   const handleCityChange = (e) => {
-    const selected = e.target.value;
-    setCity(selected);
-    localStorage.setItem('selectedCity', selected);
-    window.location.reload(); // To re-fetch listings
+    setCity(e.target.value);
+  };
+
+  const handlePincodeChange = (e) => {
+    setPincode(e.target.value);
   };
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    const queryParams = new URLSearchParams();
-    if (searchQuery.trim()) queryParams.append('query', searchQuery.trim());
-    if (city) queryParams.append('city', city);
-    navigate(`/search?${queryParams.toString()}`);
+    const query = new URLSearchParams();
+    if (searchQuery.trim()) query.set('query', searchQuery.trim());
+    // Optionally include city/pincode in search URL for SEO or filtering
+    if (city) query.set('city', city);
+    if (pincode) query.set('pincode', pincode);
+    navigate(`/search?${query.toString()}`);
     setSearchQuery('');
   };
 
-  const handleUserClick = () => navigate('/dashboard');
+  const handleLogout = () => {
+    localStorage.removeItem('userData');
+    setUser(null);
+    navigate('/');
+  };
 
   return (
     <header className="bg-white border-bottom shadow-sm py-2">
@@ -61,8 +68,20 @@ const Header = () => {
               onChange={handleCityChange}
             >
               <option value="Lucknow">Lucknow</option>
-              {/* Add more if needed */}
+              {/* Add more cities here */}
             </select>
+          </div>
+
+          {/* 📍 Pincode Input */}
+          <div className="col-auto">
+            <input
+              type="text"
+              className="form-control form-control-sm"
+              style={{ width: "120px" }}
+              placeholder="Pincode"
+              value={pincode}
+              onChange={handlePincodeChange}
+            />
           </div>
 
           {/* 🔍 Search Bar */}
@@ -84,17 +103,15 @@ const Header = () => {
           {/* 🔗 Navigation Links */}
           <div className="col-auto d-flex align-items-center gap-3 flex-wrap">
             <Link to="/" className="text-dark small text-decoration-none">Home</Link>
-
             {categories.map((cat, idx) => (
-  <Link
-    key={idx}
-    to={`/category/${cat.slug}`}
-    className="text-dark small text-decoration-none"
-  >
-    {cat.label}
-  </Link>
-))}
-
+              <Link
+                key={idx}
+                to={`/category/${cat.slug}`}
+                className="text-dark small text-decoration-none"
+              >
+                {cat.label}
+              </Link>
+            ))}
             <Link to="/upload" className="btn btn-sm btn-success">Post Ad</Link>
           </div>
 
@@ -109,20 +126,49 @@ const Header = () => {
               )}
             </Link>
 
+            {/* 👤 User Dropdown or Login Dropdown */}
             {user ? (
-              <div
-                className="d-flex align-items-center text-dark"
-                style={{ cursor: 'pointer' }}
-                onClick={handleUserClick}
-              >
-                <i className="fas fa-user-circle fs-5 me-1"></i>
-                <span className="small">{user.name}</span>
+              <div className="dropdown">
+                <button
+                  className="btn btn-sm btn-outline-secondary dropdown-toggle"
+                  id="userDropdown"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  <i className="fas fa-user-circle me-1"></i>
+                  {user.name}
+                </button>
+                <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                  <li>
+                    <Link className="dropdown-item" to="/dashboard">Dashboard</Link>
+                  </li>
+                  <li><hr className="dropdown-divider" /></li>
+                  <li>
+                    <button className="dropdown-item" onClick={handleLogout}>Logout</button>
+                  </li>
+                </ul>
               </div>
             ) : (
-              <Link to="/login" className="btn btn-sm btn-primary">Login</Link>
+              <div className="dropdown">
+                <button
+                  className="btn btn-sm btn-primary dropdown-toggle"
+                  id="loginDropdown"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  Login
+                </button>
+                <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="loginDropdown">
+                  <li>
+                    <Link className="dropdown-item" to="/login">User Login</Link>
+                  </li>
+                  <li>
+                    <Link className="dropdown-item" to="/owner-login">Owner Login</Link>
+                  </li>
+                </ul>
+              </div>
             )}
           </div>
-
         </div>
       </div>
     </header>

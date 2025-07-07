@@ -1,173 +1,135 @@
-// ✅ Updated CategoryPage.js with city-based filtering and layout improvements
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { FaHeart, FaCheckCircle } from 'react-icons/fa';
 import '../App.css';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import LocationContext from '../context/LocationContext';
 
 const CategoryPage = () => {
   const { name } = useParams();
-const normalizedName = name.toLowerCase(); // 🔁 normalize
+  const normalizedName = name.toLowerCase();
+
+  const { city, pincode } = useContext(LocationContext);
 
   const [listings, setListings] = useState([]);
-  const [filteredListings, setFilteredListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOption, setSortOption] = useState('Latest');
+
   const categoryName = name.charAt(0).toUpperCase() + name.slice(1);
-  const selectedCity = localStorage.getItem('selectedCity');
 
   useEffect(() => {
     const fetchListings = async () => {
+      setLoading(true);
       try {
-      let url = `http://localhost:5000/api/listings?category=${normalizedName}`;
-
-        if (selectedCity) url += `&city=${selectedCity}`;
+        let url = `http://localhost:5000/api/listings?category=${normalizedName}`;
+        if (city) url += `&city=${encodeURIComponent(city)}`;
+        if (pincode) url += `&pincode=${encodeURIComponent(pincode)}`;
 
         const response = await fetch(url);
         const data = await response.json();
         setListings(data);
-        setFilteredListings(data);
       } catch (error) {
         console.error('Error fetching listings:', error);
+        setListings([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchListings();
-  }, [name]);
+  }, [name, city, pincode]);
 
-  useEffect(() => {
-    const filtered = listings.filter(item =>
+  // ✅ Compute filteredListings *on every render* so it's always fresh
+  const filteredListings = listings
+    .filter((item) =>
       item.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredListings(filtered);
-  }, [searchTerm, listings]);
+    )
+    .sort((a, b) => {
+      if (sortOption === 'Price: Low to High') return a.price - b.price;
+      if (sortOption === 'Price: High to Low') return b.price - a.price;
+      return 0; // Latest or default: no sorting
+    });
 
-  useEffect(() => {
-    let sorted = [...filteredListings];
-    if (sortOption === 'Price: Low to High') {
-      sorted.sort((a, b) => a.price - b.price);
-    } else if (sortOption === 'Price: High to Low') {
-      sorted.sort((a, b) => b.price - a.price);
-    } else {
-      sorted = [...listings];
-    }
-    setFilteredListings(sorted);
-  }, [sortOption]);
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <div className="container text-center my-5">Loading...</div>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
       <Header />
+      <div className="container my-4">
+        <h2 className="mb-3">{categoryName}</h2>
 
-      <main className="container py-4">
-        <section className="mb-4">
-          <h2 className="fw-bold">{categoryName} Listings</h2>
-          <p className="text-muted">
-            Explore the best {categoryName.toLowerCase()} listings{selectedCity ? ` in ${selectedCity}` : ''} from verified users.
-          </p>
-        </section>
-
-        <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="d-flex flex-wrap gap-2 mb-3">
           <input
             type="text"
-            className="form-control w-50"
-            placeholder="Search listings..."
+            className="form-control form-control-sm"
+            placeholder="Search within this category..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ maxWidth: '250px' }}
           />
+
           <select
-            className="form-select w-auto ms-3"
+            className="form-select form-select-sm"
             value={sortOption}
             onChange={(e) => setSortOption(e.target.value)}
+            style={{ maxWidth: '200px' }}
           >
-            <option>Latest</option>
-            <option>Price: Low to High</option>
-            <option>Price: High to Low</option>
+            <option value="Latest">Sort by: Latest</option>
+            <option value="Price: Low to High">Price: Low to High</option>
+            <option value="Price: High to Low">Price: High to Low</option>
           </select>
         </div>
 
-        {loading ? (
-          <div className="text-center">
-            <div className="spinner-border text-primary" role="status" />
-            <p className="mt-2">Loading...</p>
-          </div>
+        {filteredListings.length === 0 ? (
+          <div className="text-muted">No listings found for this category.</div>
         ) : (
-          <div className="row g-4">
-  {filteredListings.length > 0 ? (
-    filteredListings.map(item => (
-      <div className="col-sm-6 col-md-4 col-lg-3" key={item.id}>
-    <Link
-  to={item.source === 'products' ? `/product/${item.id}` : `/listing/${item.id}`}
-  className="text-decoration-none text-dark"
->
-
-          <div className="card h-100 border-0 shadow rounded-4">
-            
-            {/* 🖼️ Image Container */}
-            <div className="position-relative">
-              <div
-                style={{
-                  height: '260px',
-                  backgroundColor: '#f8f9fa',
-                  overflow: 'hidden',
-                  borderTopLeftRadius: '1rem',
-                  borderTopRightRadius: '1rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <img
-                  src={item.image || 'https://via.placeholder.com/300x180?text=No+Image'}
-                  alt={item.title}
-                  className="img-fluid w-100"
-                  
-                />
+          <div className="row g-3">
+            {filteredListings.map((item) => (
+              <div className="col-md-3" key={item._id || item.id}>
+                <div className="card h-100 shadow-sm">
+                  <div style={{ height: '180px', overflow: 'hidden' }}>
+                    <img
+                      src={
+                        item.image ||
+                        'https://via.placeholder.com/300x200?text=No+Image'
+                      }
+                      className="card-img-top"
+                      alt={item.title}
+                      style={{ objectFit: 'cover', height: '100%' }}
+                    />
+                  </div>
+                  <div className="card-body">
+                    <h5 className="card-title">{item.title}</h5>
+                    <p className="card-text text-success">₹{item.price}</p>
+                    <p className="card-text small text-muted">
+                      📍 {item.location || 'Not specified'}
+                    </p>
+                    <Link
+                      to={
+                        item.source === 'products'
+                          ? `/product/${item._id || item.id}`
+                          : `/listing/${item._id || item.id}`
+                      }
+                      className="btn btn-sm btn-primary w-100"
+                    >
+                      View Details
+                    </Link>
+                  </div>
+                </div>
               </div>
-
-              {/* ❤️ Wishlist Icon */}
-              <FaHeart
-                className="position-absolute top-0 end-0 m-2 text-danger"
-                style={{
-                  fontSize: '1.2rem',
-                  backgroundColor: '#fff',
-                  borderRadius: '50%',
-                  padding: '5px',
-                }}
-              />
-
-              {/* ✅ Verified Badge */}
-              <span className="position-absolute top-0 start-0 m-2 badge bg-success d-flex align-items-center gap-1 px-2 py-1 rounded-pill">
-                <FaCheckCircle style={{ fontSize: '0.9rem' }} /> Verified
-              </span>
-            </div>
-
-            {/* 📄 Card Body */}
-            <div className="card-body text-center">
-              <h6 className="card-title mb-1 fw-semibold text-truncate">{item.title}</h6>
-              <p className="text-muted small mb-1">{item.location}</p>
-              <p className="fw-bold text-primary fs-6 mb-0">₹{item.price}</p>
-            </div>
+            ))}
           </div>
-        </Link>
-      </div>
-    ))
-  ) : (
-    <div className="col-12">
-      <div className="alert alert-warning text-center">
-        No listings found in this category.
-      </div>
-    </div>
-  )}
-</div>
-
         )}
-      </main>
-
+      </div>
       <Footer />
     </>
   );

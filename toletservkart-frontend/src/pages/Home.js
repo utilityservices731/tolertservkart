@@ -1,39 +1,40 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
-import '../App.css';
 
+import '../App.css';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import LocationContext from '../context/LocationContext';
 
 const Home = () => {
   const [categoryProducts, setCategoryProducts] = useState({});
   const [listings, setListings] = useState([]);
 
-  // ✅ Get selected city from localStorage
-  const selectedCity = localStorage.getItem('selectedCity') || '';
+  // ✅ Get city and pincode from context
+  const { city, pincode } = useContext(LocationContext);
 
-  // Fetch category-wise products
   useEffect(() => {
-    axios.get("http://localhost:5000/api/category-wise-products", {
-      params: selectedCity ? { city: selectedCity } : {},
-    })
-      .then(res => {
-        setCategoryProducts(res.data);
-      })
+    const params = {};
+    if (city) params.city = city;
+    if (pincode) params.pincode = pincode;
+
+    axios
+      .get("http://localhost:5000/api/category-wise-products", { params })
+      .then(res => setCategoryProducts(res.data))
       .catch(err => console.error("Category fetch error", err));
-  }, [selectedCity]);
+  }, [city, pincode]);
 
-  // Fetch latest listings
   useEffect(() => {
-    axios.get("http://localhost:5000/api/latest-listings", {
-      params: selectedCity ? { city: selectedCity } : {},
-    })
-      .then(res => {
-        setListings(res.data);
-      })
+    const params = {};
+    if (city) params.city = city;
+    if (pincode) params.pincode = pincode;
+
+    axios
+      .get("http://localhost:5000/api/latest-listings", { params })
+      .then(res => setListings(res.data))
       .catch(err => console.error("Listings fetch error", err));
-  }, [selectedCity]);
+  }, [city, pincode]);
 
   return (
     <>

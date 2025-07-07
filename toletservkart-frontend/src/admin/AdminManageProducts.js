@@ -80,7 +80,7 @@ function AdminManageProducts() {
                 <th>Title</th>
                 <th>Description</th>
                 <th>Price</th>
-                <th>Rent Price</th>
+                {/* <th>Rent Price</th> */}
                 <th>Category</th>
                 <th>Image</th>
                 <th>Condition</th>
@@ -116,11 +116,11 @@ function AdminManageProducts() {
                     ) : `₹${p.price}`}
                   </td>
 
-                  <td>
+                  {/* <td>
                     {editingProductId === p.id ? (
                       <input type="number" className="form-control" value={editedData.rent_price || ''} onChange={(e) => handleChange('rent_price', e.target.value)} />
                     ) : p.rent_price ? `₹${p.rent_price}` : '-'}
-                  </td>
+                  </td> */}
 
                   <td>
                     {editingProductId === p.id ? (

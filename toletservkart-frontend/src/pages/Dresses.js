@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState, useContext } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../App.css";
-
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import LocationContext from "../context/LocationContext";
 
 const Dresses = () => {
   const navigate = useNavigate();
+  const location = useLocation(); // track path changes
+  const { city, pincode } = useContext(LocationContext);
 
   const defaultProducts = [
     {
@@ -47,26 +49,40 @@ const Dresses = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/products?category=dresses");
+        let url = `http://localhost:5000/api/products?category=dresses`;
+
+        const params = [];
+        if (city) params.push(`city=${encodeURIComponent(city)}`);
+        if (pincode) params.push(`pincode=${encodeURIComponent(pincode)}`);
+        if (params.length > 0) url += `&${params.join("&")}`;
+
+        const res = await fetch(url);
         const data = await res.json();
         if (Array.isArray(data) && data.length > 0) {
           const formatted = data.map((item, index) => ({
             id: item._id || index,
             title: item.title || `Dress ${index + 1}`,
-            price: item.price || "Price Not Available",
-            image: item.image || `https://source.unsplash.com/random/500x600?fashion&sig=${index}`,
+            price:
+              item.price !== undefined
+                ? `₹${item.price} (Rent)`
+                : "Price Not Available",
+            image:
+              item.image ||
+              `https://source.unsplash.com/random/500x600?fashion&sig=${index}`,
           }));
           setProducts(formatted);
+        } else {
+          setProducts(defaultProducts); // fallback if empty
         }
       } catch (err) {
         console.error("Failed to fetch products. Showing default list.", err);
+        setProducts(defaultProducts);
       }
     };
 
     fetchProducts();
-  }, []);
+  }, [city, pincode, location.pathname]); // re-run on URL change
 
-  // ✅ Add to Cart Logic
   const handleAddToCart = (product) => {
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
     const exists = cart.find((item) => item.id === product.id);
@@ -86,37 +102,43 @@ const Dresses = () => {
 
       <div className="dresses-page">
         <h2 className="dresses-heading">Discover Trendy Dresses</h2>
-        <p className="dresses-subtext">Explore stunning outfits perfect for parties, weddings, and events.</p>
+        <p className="dresses-subtext">
+          Explore stunning outfits perfect for parties, weddings, and events.
+        </p>
 
         <div className="product-grid">
-  {products.map((product) => (
-    <div key={product.id} className="product-card shadow rounded">
-      <div
-        style={{
-          height: '250px',
-          backgroundColor: '#f8f9fa',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          overflow: 'hidden',
-          borderRadius: '0.5rem',
-        }}
-      >
-        <img
-          src={product.image || 'https://via.placeholder.com/250x250?text=No+Image'}
-          alt={product.title}
-        
-        />
-      </div>
-      <h3 className="product-title mt-2">{product.title}</h3>
-      <p className="product-price text-muted">₹ {product.price}</p>
-      <button className="product-btn btn btn-sm btn-primary w-100 mt-2" onClick={() => handleAddToCart(product)}>
-        🛒 Rent Now
-      </button>
-    </div>
-  ))}
-</div>
-
+          {products.map((product) => (
+            <div key={product.id} className="product-card shadow rounded">
+              <div
+                style={{
+                  height: "250px",
+                  backgroundColor: "#f8f9fa",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  overflow: "hidden",
+                  borderRadius: "0.5rem",
+                }}
+              >
+                <img
+                  src={
+                    product.image ||
+                    "https://via.placeholder.com/250x250?text=No+Image"
+                  }
+                  alt={product.title}
+                />
+              </div>
+              <h3 className="product-title mt-2">{product.title}</h3>
+              <p className="product-price text-muted">{product.price}</p>
+              <button
+                className="product-btn btn btn-sm btn-primary w-100 mt-2"
+                onClick={() => handleAddToCart(product)}
+              >
+                🛒 Rent Now
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
 
       <Footer />

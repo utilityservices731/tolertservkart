@@ -37,27 +37,37 @@ function ProductDetails() {
       .catch((err) => console.log('Similar fetch failed:', err));
   };
 
-  const handleAddToCart = () => {
-    const cart = JSON.parse(localStorage.getItem('cart')) || [];
-    const itemToAdd = {
-      id: product._id,
-        product_id: String(product?.id || product?._id),
-      title: product.title,
-      price: product.price,
-      image: product.image,
-      location: product.location,
-       source: "products"
-    };
-    const exists = cart.find((item) => item.id === itemToAdd.id);
-    if (!exists) {
-      cart.push(itemToAdd);
-      localStorage.setItem('cart', JSON.stringify(cart));
-      alert('✔️ Product added to cart!');
-    } else {
-      alert('⚠️ Already in cart.');
-    }
-    navigate('/cart');
+const handleAddToCart = () => {
+  const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+  // Always a string id
+  const itemToAdd = {
+    id: String(product?._id || product?.id),
+    title: product.title,
+    price: product.price,
+    image: product.image,
+    location: product.location,
+    source: "products"
   };
+
+  // Check by id + source
+  const exists = cart.find(
+    (item) => item.id === itemToAdd.id && item.source === "products"
+  );
+
+  if (!exists) {
+    cart.push(itemToAdd);
+    localStorage.setItem('cart', JSON.stringify(cart));
+    alert('✔️ Product added to cart!');
+  } else {
+    alert('⚠️ Already in cart.');
+  }
+
+  // Navigate to cart
+  navigate('/cart');
+};
+
+
 
    const handleAddToWishlist = async () => {
     const userData = JSON.parse(localStorage.getItem('userData'));
@@ -111,7 +121,7 @@ function ProductDetails() {
   <div
     style={{
       width: '100%',
-      height: '500px',
+   
       backgroundColor: '#f8f9fa',
       display: 'flex',
       alignItems: 'center',
@@ -124,7 +134,11 @@ function ProductDetails() {
       src={product.image || 'https://via.placeholder.com/500x600?text=No+Image'}
       alt={product.title}
       className="img-fluid"
-    
+       style={{
+        width: '100%',
+        height: '600px',
+        objectFit: 'contain',
+      }}
     />
   </div>
 </div>
@@ -138,14 +152,33 @@ function ProductDetails() {
             <p className="mb-4">{product.description || 'No description available.'}</p>
 
             {/* Buttons */}
-            <div className="d-flex flex-wrap gap-3 mb-4">
-              <button className="btn btn-warning btn-lg" onClick={handleAddToCart}>🛒 Rent Now</button>
-                  <button className="btn btn-outline-danger btn-lg" onClick={handleAddToWishlist}>
-                ❤️ Add to Wishlist
-              </button>
-              <button className="btn btn-outline-primary btn-lg" onClick={handleAddToCart}>➕ Add to Cart</button>
-              <button className="btn btn-outline-secondary btn-lg" onClick={() => navigate(-1)}>⬅ Back</button>
-            </div>
+        <div className="d-flex flex-wrap gap-3 mb-4">
+  <button
+    className="btn btn-warning btn-lg"
+    onClick={() => handleAddToCart("rent")}
+  >
+    🛒 Rent Now
+  </button>
+  <button
+    className="btn btn-outline-danger btn-lg"
+    onClick={handleAddToWishlist}
+  >
+    ❤️ Add to Wishlist
+  </button>
+  <button
+    className="btn btn-outline-primary btn-lg"
+    onClick={() => handleAddToCart("cart")}
+  >
+    ➕ Add to Cart
+  </button>
+  <button
+    className="btn btn-outline-secondary btn-lg"
+    onClick={() => navigate(-1)}
+  >
+    ⬅ Back
+  </button>
+</div>
+
 
             {/* Delivery Info */}
             <div className="mb-4">

@@ -737,18 +737,23 @@ app.delete("/api/wishlist/:wishlistId", async (req, res) => {
 
 // ---------- GET ALL LISTINGS ----------
 app.get("/api/listings", (req, res) => {
-  const { category, city } = req.query;
+  const { category, city, pincode } = req.query; // ✅ Added pincode
   let query = `SELECT * FROM listings WHERE verified = 1`;
   const params = [];
 
-if (category) {
-  query += ` AND LOWER(category) = ?`;
-  params.push(category.toLowerCase());
-}
+  if (category) {
+    query += ` AND LOWER(category) = ?`;
+    params.push(category.toLowerCase());
+  }
 
   if (city) {
     query += ` AND LOWER(location) LIKE LOWER(?)`;
     params.push(`%${city}%`);
+  }
+
+  if (pincode) {
+    query += ` AND pincode = ?`;
+    params.push(pincode);
   }
 
   query += ` ORDER BY id DESC`;
@@ -764,26 +769,42 @@ if (category) {
 });
 
 app.get('/api/search', (req, res) => {
-  const { query, city } = req.query;
+  const { query, city, pincode } = req.query;
 
   const values = [];
   const listingsSQL = `
-    SELECT id, title, description, image, price, location, 'listing' AS source 
+    SELECT id, title, description, image, price, location, pincode, color, 'listing' AS source 
     FROM listings WHERE verified = 1
   `;
   const productsSQL = `
-    SELECT id, title, description, image, price, location, 'product' AS source 
+    SELECT id, title, description, image, price, location, pincode, color, 'product' AS source 
     FROM products WHERE verified = 1
   `;
 
   const conditions = [];
+  
   if (query) {
-    conditions.push("title LIKE ?");
-    values.push(`%${query}%`);
+    const words = query.trim().split(/\s+/);
+    const wordConditions = [];
+
+    for (let word of words) {
+      wordConditions.push(`(title LIKE ? OR description LIKE ? OR color LIKE ?)`);
+      values.push(`%${word}%`, `%${word}%`, `%${word}%`);
+    }
+
+    if (wordConditions.length > 0) {
+      conditions.push(wordConditions.join(" AND "));
+    }
   }
+
   if (city) {
-    conditions.push("location = ?");
+    conditions.push(`location = ?`);
     values.push(city);
+  }
+
+  if (pincode) {
+    conditions.push(`pincode = ?`);
+    values.push(pincode);
   }
 
   const conditionStr = conditions.length ? ` AND ${conditions.join(" AND ")}` : "";
@@ -791,7 +812,12 @@ app.get('/api/search', (req, res) => {
   const finalListingsQuery = listingsSQL + conditionStr;
   const finalProductsQuery = productsSQL + conditionStr;
 
-  const finalQuery = `${finalListingsQuery} UNION ${finalProductsQuery} ORDER BY id DESC`;
+  const finalQuery = `
+    ${finalListingsQuery}
+    UNION
+    ${finalProductsQuery}
+    ORDER BY id DESC
+  `;
 
   db.query(finalQuery, values.concat(values), (err, results) => {
     if (err) {
@@ -801,6 +827,8 @@ app.get('/api/search', (req, res) => {
     res.json(results);
   });
 });
+
+
 
 
 app.get('/api/admin/orders', (req, res) => {
@@ -931,16 +959,19 @@ app.get('/api/admin/users', async (req, res) => {
 
 // ✅ GET: /api/category-wise-products
 app.get("/api/category-wise-products", (req, res) => {
-  const { city } = req.query;
+  const { city, pincode } = req.query;
 
   let query = `
-    SELECT category, id, title AS name, image, price, location
+    SELECT category, id, title AS name, image, price, location, pincode
     FROM listings
     WHERE verified = 1
   `;
 
   if (city) {
     query += ` AND location = ${db.escape(city)}`;
+  }
+  if (pincode) {
+    query += ` AND pincode = ${db.escape(pincode)}`;
   }
 
   query += ` ORDER BY id DESC`;
@@ -977,16 +1008,19 @@ app.get("/api/category-wise-products", (req, res) => {
 
 // ✅ GET: /api/latest-listings
 app.get("/api/latest-listings", (req, res) => {
-  const { city } = req.query;
+  const { city, pincode } = req.query;
 
   let query = `
-    SELECT id, title, description, image, price, location
+    SELECT id, title, description, image, price, location, pincode
     FROM listings
     WHERE verified = 1
   `;
 
   if (city) {
     query += ` AND location = ${db.escape(city)}`;
+  }
+  if (pincode) {
+    query += ` AND pincode = ${db.escape(pincode)}`;
   }
 
   query += ` ORDER BY id DESC LIMIT 8`;
@@ -1002,22 +1036,28 @@ app.get("/api/latest-listings", (req, res) => {
 });
 
 
+
 // backend index.js or server.js
 app.get("/api/all-products", (req, res) => {
-  const { city } = req.query;
+  const { city, pincode } = req.query;
+
+  // Build WHERE conditions
+  const whereConditions = ["verified = 1"];
+  if (city) whereConditions.push(`location = ${db.escape(city)}`);
+  if (pincode) whereConditions.push(`pincode = ${db.escape(pincode)}`);
+
+  const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
   const listingQuery = `
-    SELECT id, title, description, image, price, category, location, 'listings' AS source
+    SELECT id, title, description, image, price, category, location, pincode, 'listings' AS source
     FROM listings
-    WHERE verified = 1
-    ${city ? `AND location = ${db.escape(city)}` : ''}
+    ${whereClause}
   `;
 
   const productQuery = `
-    SELECT id, title, description, image, price, category, location, 'products' AS source
+    SELECT id, title, description, image, price, category, location, pincode, 'products' AS source
     FROM products
-    WHERE verified = 1
-    ${city ? `AND location = ${db.escape(city)}` : ''}
+    ${whereClause}
   `;
 
   const finalQuery = `
@@ -1033,6 +1073,37 @@ app.get("/api/all-products", (req, res) => {
       return res.status(500).json({ error: "Database error" });
     }
 
+    res.json(results);
+  });
+});
+
+app.get("/api/properties", (req, res) => {
+  const { city, pincode } = req.query;
+
+  // Start with base query
+  let query = "SELECT * FROM properties WHERE verified = 1";
+  const params = [];
+
+  // Add city filter
+  if (city) {
+    query += " AND location = ?";
+    params.push(city);
+  }
+
+  // Add pincode filter
+  if (pincode) {
+    query += " AND pincode = ?";
+    params.push(pincode);
+  }
+
+  // You can also ORDER BY if needed
+  query += " ORDER BY id DESC";
+
+  db.query(query, params, (err, results) => {
+    if (err) {
+      console.error("Property fetch error:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
     res.json(results);
   });
 });
@@ -1104,9 +1175,29 @@ app.get('/api/listings/:id', (req, res) => {
 });
 
 app.get('/api/products', (req, res) => {
-  const sql = 'SELECT * FROM products';
+  const { category, city, pincode } = req.query;
 
-  db.query(sql, (err, results) => {
+  let sql = 'SELECT * FROM products WHERE verified = 1';
+  const params = [];
+
+  if (category) {
+    sql += ' AND LOWER(category) = ?';
+    params.push(category.toLowerCase());
+  }
+
+  if (city) {
+    sql += ' AND LOWER(location) LIKE LOWER(?)';
+    params.push(`%${city}%`);
+  }
+
+  if (pincode) {
+    sql += ' AND pincode = ?';
+    params.push(pincode);
+  }
+
+  sql += ' ORDER BY id DESC';
+
+  db.query(sql, params, (err, results) => {
     if (err) {
       console.error('Error fetching products:', err);
       return res.status(500).json({ error: 'Database error' });
@@ -1114,6 +1205,7 @@ app.get('/api/products', (req, res) => {
     res.json(results);
   });
 });
+
 
 
 // ✅ Place Order API (Only if logged in)
@@ -1285,23 +1377,27 @@ app.post("/api/products", upload.single("image"), async (req, res) => {
       }
 
       const ownerId = decoded.id;
+
       const {
         title,
-        price,
         description,
+        price,
         rent_price,
         category,
         condition,
-        type,
         location,
+        pincode,
+        color,
+        available,
+        is_rentable
       } = req.body;
 
       const imagePath = req.file ? req.file.path : null;
 
       const sql = `
         INSERT INTO products 
-        (title, description, price, rent_price, image, category, \`condition\`, location, available, is_rentable, owner_id)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        (title, description, price, rent_price, image, category, \`condition\`, location, pincode, color, available, is_rentable, owner_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `;
 
       await query(sql, [
@@ -1313,12 +1409,14 @@ app.post("/api/products", upload.single("image"), async (req, res) => {
         category,
         condition,
         location || null,
-        1, // available by default
-        type === "rent" ? 1 : 0,
-        ownerId,
+        pincode || null,
+        color || null,
+        available === "true" || available === true ? 1 : 0,
+        is_rentable === "true" || is_rentable === true ? 1 : 0,
+        ownerId
       ]);
 
-      res.status(201).json({ message: "Product uploaded successfully" });
+      res.status(201).json({ message: "✅ Product uploaded successfully" });
     });
   } catch (error) {
     console.error("Upload error:", error);

@@ -1,15 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import LocationContext from '../context/LocationContext';
 
 function ListingDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [quantity, setQuantity] = useState(1); // Rental duration
+  const [quantity, setQuantity] = useState(1);
+
+  // ✅ Get city/pincode from Context
+  const { city, pincode } = useContext(LocationContext);
 
   useEffect(() => {
     axios
@@ -24,56 +28,67 @@ function ListingDetails() {
       });
   }, [id]);
 
-  const handleAddToCart = () => {
-    const cart = JSON.parse(localStorage.getItem('cart')) || [];
-    const exists = cart.find((item) => item.id === String(listing._id));
+const handleAddToCart = () => {
+  const cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-    if (!exists) {
-      cart.push({
-        id: String(listing._id),
-        title: listing.title,
-        image: listing.image,
-        price: listing.price,
-        months: quantity,
-        total: listing.price * quantity,
-      });
-      localStorage.setItem('cart', JSON.stringify(cart));
-      alert(`✔️ Added to cart for ${quantity} month(s)`);
-      navigate('/cart');
-    } else {
-      alert('⚠️ Already in cart');
-    }
+  // Unique id combining listing id and quantity
+  const itemToAdd = {
+    id: `${String(listing?._id || listing?.id)}_${quantity}`,
+    title: listing.title,
+    image: listing.image,
+    price: listing.price,
+    months: quantity,
+    total: listing.price * quantity,
+    source: "listings"
   };
+
+  // Check if this listing+duration is already in cart
+  const exists = cart.find(
+    (item) => item.id === itemToAdd.id && item.source === "listings"
+  );
+
+  if (!exists) {
+    cart.push(itemToAdd);
+    localStorage.setItem('cart', JSON.stringify(cart));
+    alert(`✔️ Added to cart for ${quantity} month(s)`);
+  } else {
+    alert(`⚠️ Already in cart for ${quantity} month(s)`);
+  }
+
+  // Navigate to cart
+  navigate('/cart');
+};
+
+
 
   const handleAddToWishlist = async () => {
     const userData = JSON.parse(localStorage.getItem('userData'));
-    if (!userData) return alert("⚠️ Please login to use wishlist");
+    if (!userData) return alert('⚠️ Please login to use wishlist');
 
     try {
-      const res = await axios.post("http://localhost:5000/api/wishlist", {
+      const res = await axios.post('http://localhost:5000/api/wishlist', {
         user_id: userData.id,
-      product_id: String(listing?.id || listing?._id),  // ✅ correct this line
-
+        product_id: String(listing?._id),
         title: listing.title,
         image: listing.image,
         price: listing.price,
         location: listing.location,
-         source: "listings"
+        source: 'listings',
       });
 
       if (res.status === 201) {
-        alert("❤️ Added to wishlist!");
+        alert('❤️ Added to wishlist!');
       } else {
-        alert("❌ Failed to add to wishlist.");
+        alert('❌ Failed to add to wishlist.');
       }
     } catch (error) {
-      console.error("Wishlist add error:", error);
-      alert("❌ Something went wrong. Please try again.");
+      console.error('Wishlist add error:', error);
+      alert('❌ Something went wrong. Please try again.');
     }
   };
 
-  const increment = () => setQuantity(prev => prev + 1);
-  const decrement = () => setQuantity(prev => (prev > 1 ? prev - 1 : 1));
+  const increment = () => setQuantity((prev) => prev + 1);
+  const decrement = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
 
   if (loading) {
     return (
@@ -103,22 +118,34 @@ function ListingDetails() {
     <>
       <Header />
       <div className="container py-5">
+        {/* ✅ Display current location */}
+        {(city || pincode) && (
+          <div className="mb-3 text-muted small">
+            Viewing in: {city && <strong>{city}</strong>} {pincode && <span>(Pincode: <strong>{pincode}</strong>)</span>}
+          </div>
+        )}
+
         <div className="row g-5 align-items-start">
           {/* Image */}
           <div className="col-md-6">
-           <img
-  src={listing.image || 'https://via.placeholder.com/600x400?text=No+Image'}
-  alt={listing.title}
-  className="img-fluid rounded shadow-sm"
-
-/>
-
+            <img
+              src={listing.image || 'https://via.placeholder.com/600x400?text=No+Image'}
+              alt={listing.title}
+              className=" rounded shadow-sm"
+                style={{
+        width: '100%',
+        height: '605px',
+        objectFit: 'contain',
+      }}
+            />
           </div>
 
           {/* Details */}
           <div className="col-md-6">
             <h2 className="fw-bold mb-3">{listing.title}</h2>
-            <p className="fs-4 text-success mb-2">₹{parseInt(listing.price).toLocaleString('en-IN')} / month</p>
+            <p className="fs-4 text-success mb-2">
+              ₹{parseInt(listing.price).toLocaleString('en-IN')} / month
+            </p>
             <p className="text-muted">📍 {listing.location || 'Location not specified'}</p>
 
             <hr />
